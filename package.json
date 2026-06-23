@@ -13,8 +13,8 @@
     "dev:backend": "npm -w backend run dev",
     "dev:frontend": "npm -w frontend run dev",
     "build": "npm -w backend run build && npm -w frontend run build",
-    "typecheck": "npm -w backend run typecheck",
-    "test": "npm -w backend run test"
+    "typecheck": "npm -w backend run typecheck && npm -w frontend run typecheck",
+    "test": "npm -w backend run test && npm -w frontend run test"
   },
   "devDependencies": {
     "concurrently": "^9.1.0"
