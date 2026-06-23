@@ -1,0 +1,39 @@
+{
+  "$schema": "./backend/config.schema.json",
+  "_comment": "Skill Smith runtime configuration. Every field is overridable by an environment variable (see README / backend/src/config/config.ts). Edit values here for persistent defaults.",
+
+  "model": "claude-opus-4-8",
+  "_model": "Engine model passed to `claude -p --model`. Default is the strongest coding model. Env override: SKILL_SMITH_MODEL. Set to \"\" to use the CLI's own default model.",
+
+  "bare": false,
+  "_bare": "Pass --bare to the claude CLI (skips local hooks/skills/MCP/CLAUDE.md for deterministic CI runs). Bare mode needs ANTHROPIC_API_KEY. Env: SKILL_SMITH_BARE.",
+
+  "claudeBin": "claude",
+  "_claudeBin": "Path/name of the Claude Code CLI binary. Tests point this at a mock. Env: SKILL_SMITH_CLAUDE_BIN.",
+
+  "workspaceDir": "./workspace",
+  "_workspaceDir": "Where per-job artifacts are written (workspace/<jobId>/). Env: SKILL_SMITH_WORKSPACE_DIR.",
+
+  "maxParallelism": 3,
+  "_maxParallelism": "Max concurrent `claude -p` invocations across all jobs (cost/rate guardrail). Env: SKILL_SMITH_MAX_PARALLELISM.",
+
+  "perJobInvocationCeiling": 40,
+  "_perJobInvocationCeiling": "Hard cap on claude invocations per job; the pipeline stops gracefully when hit. Env: SKILL_SMITH_INVOCATION_CEILING.",
+
+  "retry": {
+    "maxRetries": 3,
+    "baseDelayMs": 1000,
+    "maxDelayMs": 30000
+  },
+  "_retry": "Retry-with-backoff for retryable claude failures (rate_limit/overloaded/server_error/connection). Env: SKILL_SMITH_RETRY_MAX, SKILL_SMITH_RETRY_BASE_DELAY_MS, SKILL_SMITH_RETRY_MAX_DELAY_MS.",
+
+  "toolPermissions": {
+    "scope": [],
+    "research": ["WebSearch", "WebFetch", "Read", "Bash"],
+    "design": [],
+    "generate": ["Read", "Write", "Edit", "Bash"],
+    "test": ["Read", "Bash"],
+    "package": ["Read", "Bash"]
+  },
+  "_toolPermissions": "Per-stage --allowed-tools. Only the research stage may use the web. Stages not listed get no tools."
+}

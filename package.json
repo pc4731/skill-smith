@@ -1,0 +1,25 @@
+{
+  "name": "skill-smith",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Skill Smith — turn a one-line project description into a tested set of Claude Agent Skills, using the Claude Code CLI as the engine.",
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
+  "scripts": {
+    "dev": "concurrently -n backend,frontend -c blue,magenta \"npm:dev:backend\" \"npm:dev:frontend\"",
+    "dev:backend": "npm -w backend run dev",
+    "dev:frontend": "npm -w frontend run dev",
+    "build": "npm -w backend run build && npm -w frontend run build",
+    "typecheck": "npm -w backend run typecheck",
+    "test": "npm -w backend run test"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

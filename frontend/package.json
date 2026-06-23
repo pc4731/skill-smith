@@ -1,0 +1,11 @@
+{
+  "name": "@skill-smith/frontend",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "echo \"[frontend] React UI is implemented in phase-1 task t6\" && exit 0",
+    "build": "echo \"[frontend] build added in task t6\" && exit 0",
+    "test": "echo \"[frontend] no frontend tests yet (added in task t6)\" && exit 0"
+  }
+}
