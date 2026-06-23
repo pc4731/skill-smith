@@ -11,3 +11,7 @@ workspace/*
 # Local env
 .env
 .env.local
+
+# Runtime-verification transient data (keep probe.mjs + results.json as evidence)
+.verify/workspace/
+.verify/*.log

@@ -1,0 +1,66 @@
+{
+  "at": "2026-06-23T16:54:22.874Z",
+  "base": "http://127.0.0.1:4555",
+  "checks": [
+    {
+      "name": "backend boots & /api/health",
+      "target": "GET /api/health",
+      "result": "PASS",
+      "detail": "model=claude-opus-4-8"
+    },
+    {
+      "name": "say-hi round-trip completes",
+      "target": "POST /api/say-hi",
+      "result": "PASS",
+      "detail": "status=done calls=1 cost=$0.0013"
+    },
+    {
+      "name": "SSE stream replays events",
+      "target": "GET /api/jobs/:id/stream",
+      "result": "PASS",
+      "detail": "first frame had an event: line"
+    },
+    {
+      "name": "Stage 0 scoping parks awaiting input",
+      "target": "POST /api/jobs",
+      "result": "PASS",
+      "detail": "questions=3"
+    },
+    {
+      "name": "answers/use-defaults writes scope.json",
+      "target": "POST /api/jobs/:id/answers",
+      "result": "PASS",
+      "detail": "status=200 usedDefaults=true scope.json=true"
+    },
+    {
+      "name": "refresh re-attaches from disk",
+      "target": "GET /api/jobs/:id (reload)",
+      "result": "PASS",
+      "detail": "desc persisted=true scopeStage=done"
+    },
+    {
+      "name": "Stages 2-6 remain pending",
+      "target": "job.stages",
+      "result": "PASS",
+      "detail": "nonScopeAllPending=true"
+    },
+    {
+      "name": "empty description -> 400",
+      "target": "POST /api/jobs {}",
+      "result": "PASS",
+      "detail": "status=400"
+    },
+    {
+      "name": "missing job -> 404",
+      "target": "GET /api/jobs/does-not-exist",
+      "result": "PASS",
+      "detail": "status=404"
+    },
+    {
+      "name": "budget snapshot endpoint",
+      "target": "GET /api/budget",
+      "result": "PASS",
+      "detail": "count=2 ceiling=0"
+    }
+  ]
+}
