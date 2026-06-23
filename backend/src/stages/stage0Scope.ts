@@ -3,6 +3,7 @@ import type { AppContext } from "../context.js";
 import { applyResult, ceilingReached } from "../meter/costMeter.js";
 import { emit, emitJob } from "../runtime/broadcast.js";
 import type { Scope, ScopeQuestion } from "../jobs/types.js";
+import { runStage1 } from "./stage1Research.js";
 
 /** JSON schema handed to `claude -p --json-schema` so Stage 0 returns typed fields. */
 export const SCOPE_JSON_SCHEMA = {
@@ -164,6 +165,9 @@ export async function applyAnswers(ctx: AppContext, jobId: string, input: Answer
 
   await emit(ctx, jobId, "stage", { stageKey: "scope", status: "done" });
   await emitJob(ctx, job);
+
+  // Advance the pipeline into Stage 1 research (background; progress via SSE).
+  void runStage1(ctx, jobId);
   return scope;
 }
 

@@ -4,8 +4,8 @@ import fsp from "node:fs/promises";
 import path from "node:path";
 import { StageKeys } from "../config/config.js";
 import { emptyMeter } from "../meter/costMeter.js";
-import { eventsFile, jobDir, jobFile, rawFile, scopeFile } from "./jobPaths.js";
-import type { Job, JobKind, Scope, StageState } from "./types.js";
+import { eventsFile, jobDir, jobFile, rawFile, researchFile, scopeFile } from "./jobPaths.js";
+import type { Job, JobKind, ResearchBrief, Scope, StageState } from "./types.js";
 
 export interface CreateJobInput {
   description: string;
@@ -23,7 +23,24 @@ function initialStages(): StageState[] {
  * the browser holds only a derived view, so a refresh re-reads from here.
  */
 export class JobStore {
+  /** Per-job write mutex so concurrent update()s (e.g. parallel Stage-1 domains) don't clobber each other. */
+  private locks = new Map<string, Promise<unknown>>();
+
   constructor(private readonly workspaceDir: string) {}
+
+  /** Run `fn` exclusively per job id (serializes read-modify-write sections). */
+  private runExclusive<T>(id: string, fn: () => Promise<T>): Promise<T> {
+    const prev = this.locks.get(id) ?? Promise.resolve();
+    const next = prev.then(fn, fn);
+    this.locks.set(
+      id,
+      next.then(
+        () => undefined,
+        () => undefined,
+      ),
+    );
+    return next;
+  }
 
   async create(input: CreateJobInput): Promise<Job> {
     const id = randomUUID();
@@ -72,18 +89,25 @@ export class JobStore {
     return jobs;
   }
 
-  /** Read-modify-write a job atomically. Throws if the job is missing. */
-  async update(id: string, mutate: (job: Job) => void): Promise<Job> {
-    const job = await this.get(id);
-    if (!job) throw new Error(`Job not found: ${id}`);
-    mutate(job);
-    job.updatedAt = new Date().toISOString();
-    await this.write(job);
-    return job;
+  /** Read-modify-write a job atomically (serialized per job id). Throws if missing. */
+  update(id: string, mutate: (job: Job) => void): Promise<Job> {
+    return this.runExclusive(id, async () => {
+      const job = await this.get(id);
+      if (!job) throw new Error(`Job not found: ${id}`);
+      mutate(job);
+      job.updatedAt = new Date().toISOString();
+      await this.write(job);
+      return job;
+    });
   }
 
   async writeScope(id: string, scope: Scope): Promise<void> {
     await this.writeAtomic(scopeFile(this.workspaceDir, id), JSON.stringify(scope, null, 2));
+  }
+
+  /** Persist a Stage-1 research brief to research/<slug>.json (atomic). */
+  async writeBrief(id: string, domain: string, brief: ResearchBrief): Promise<void> {
+    await this.writeAtomic(researchFile(this.workspaceDir, id, domain), JSON.stringify(brief, null, 2));
   }
 
   async appendEvent(id: string, name: string, data: unknown): Promise<void> {

@@ -3,6 +3,7 @@ import type { AppContext } from "../context.js";
 import { emitJob } from "../runtime/broadcast.js";
 import { runSayHi } from "../runtime/sayHi.js";
 import { applyAnswers, runStage0 } from "../stages/stage0Scope.js";
+import { runStage1 } from "../stages/stage1Research.js";
 
 export function createRouter(ctx: AppContext): Router {
   const router = Router();
@@ -91,6 +92,25 @@ export function createRouter(ctx: AppContext): Router {
     } catch (err) {
       res.status(400).json({ error: err instanceof Error ? err.message : String(err) });
     }
+  });
+
+  // (Re-)trigger Stage 1 research for a job whose scope is answered.
+  router.post("/jobs/:id/research", async (req, res) => {
+    const job = await ctx.jobStore.get(req.params.id);
+    if (!job) {
+      res.status(404).json({ error: "job not found" });
+      return;
+    }
+    if (!job.scope?.answers) {
+      res.status(409).json({ error: "scope is not answered yet" });
+      return;
+    }
+    if (job.research?.status === "running") {
+      res.status(409).json({ error: "research already running" });
+      return;
+    }
+    void runStage1(ctx, req.params.id);
+    res.status(202).json({ ok: true });
   });
 
   return router;

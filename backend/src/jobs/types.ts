@@ -47,6 +47,45 @@ export interface Scope {
   usedDefaults?: boolean;
 }
 
+export interface ResearchSource {
+  title: string;
+  url: string;
+}
+
+/** A versioned, cited research brief for one knowledge domain (Stage 1). */
+export interface ResearchBrief {
+  domain: string;
+  key_apis: string[];
+  idioms: string[];
+  gotchas: string[];
+  version_notes: string;
+  sources: ResearchSource[];
+}
+
+export type ResearchDomainStatus = "pending" | "running" | "done" | "failed";
+
+export interface ResearchDomainState {
+  domain: string;
+  /** Filesystem-safe slug used for research/<slug>.json. */
+  slug: string;
+  status: ResearchDomainStatus;
+  error?: string;
+  /** Compact summary kept in job.json; the full brief lives in research/<slug>.json. */
+  summary?: { keyApis: number; gotchas: number; sources: number };
+}
+
+export type ResearchStatus =
+  | "pending"
+  | "running"
+  | "done"
+  | "done_with_warnings"
+  | "failed";
+
+export interface ResearchState {
+  status: ResearchStatus;
+  domains: ResearchDomainState[];
+}
+
 export interface Job {
   id: string;
   kind: JobKind;
@@ -58,5 +97,6 @@ export interface Job {
   scope?: Scope;
   questions?: ScopeQuestion[];
   answers?: Record<string, string | string[]>;
+  research?: ResearchState;
   meter: Meter;
 }

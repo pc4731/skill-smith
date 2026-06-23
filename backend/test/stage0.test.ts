@@ -36,11 +36,12 @@ describe("Stage 0 scoping", () => {
 
     const after = await ctx.jobStore.get(job.id);
     expect(after?.stages.find((s) => s.key === "scope")?.status).toBe("done");
-    // Pipeline must NOT advance past Stage 0 this phase.
-    const laterPending = after?.stages
-      .filter((s) => s.key !== "scope")
+    // Answering scope now auto-advances into Stage 1 research (Phase 2).
+    // Stages beyond research stay pending.
+    const beyondResearchPending = after?.stages
+      .filter((s) => s.key !== "scope" && s.key !== "research")
       .every((s) => s.status === "pending");
-    expect(laterPending).toBe(true);
+    expect(beyondResearchPending).toBe(true);
   });
 
   it("use-defaults path fills answers from the first option / empty text", async () => {

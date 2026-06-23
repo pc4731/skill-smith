@@ -49,6 +49,12 @@ function emit(obj) {
 }
 
 if (outputFormat === "json") {
+  // Test hook: force a per-domain research failure when the prompt names FAIL_DOMAIN.
+  const prompt = flagValue("-p") || "";
+  if (prompt.includes("FAIL_DOMAIN")) {
+    process.stderr.write("forced domain failure\n");
+    process.exit(1);
+  }
   const out = {
     type: "result",
     subtype: "success",
@@ -59,16 +65,33 @@ if (outputFormat === "json") {
     is_error: false,
   };
   if (hasSchema) {
-    out.structured_output = {
-      targetStack: "Demo stack",
-      domains: ["demo-domain-a", "demo-domain-b"],
-      likelyTasks: ["scaffold a component", "write a test"],
-      questions: [
-        { id: "q1", question: "Which variant?", type: "single", options: ["A", "B"] },
-        { id: "q2", question: "Which add-ons?", type: "multi", options: ["x", "y"] },
-        { id: "q3", question: "Any constraints?", type: "text" },
-      ],
-    };
+    const schemaArg = flagValue("--json-schema") || "";
+    const isResearch = schemaArg.includes("key_apis") || schemaArg.includes("version_notes");
+    if (isResearch) {
+      // Stage-1 research brief (valid against RESEARCH_JSON_SCHEMA, >= 2 sources).
+      out.structured_output = {
+        domain: "demo-domain",
+        key_apis: ["DemoApi.create()", "DemoApi.render()"],
+        idioms: ["prefer composition over inheritance"],
+        gotchas: ["watch out for version 2 breaking changes"],
+        version_notes: "v2.3 is current; v1 APIs removed in v2",
+        sources: [
+          { title: "Official docs", url: "https://example.com/docs" },
+          { title: "Release notes", url: "https://example.com/releases" },
+        ],
+      };
+    } else {
+      out.structured_output = {
+        targetStack: "Demo stack",
+        domains: ["demo-domain-a", "demo-domain-b"],
+        likelyTasks: ["scaffold a component", "write a test"],
+        questions: [
+          { id: "q1", question: "Which variant?", type: "single", options: ["A", "B"] },
+          { id: "q2", question: "Which add-ons?", type: "multi", options: ["x", "y"] },
+          { id: "q3", question: "Any constraints?", type: "text" },
+        ],
+      };
+    }
   }
   emit(out);
   process.exit(0);

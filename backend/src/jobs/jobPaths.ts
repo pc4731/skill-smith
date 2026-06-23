@@ -41,3 +41,19 @@ export function rawFile(workspaceDir: string, jobId: string, callId: string): st
   }
   return path.join(jobDir(workspaceDir, jobId), "raw", `${callId}.ndjson`);
 }
+
+/** Filesystem-safe slug for a domain name (used for research/<slug>.json). */
+export function slug(input: string): string {
+  const s = input
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 64);
+  return s || "domain";
+}
+
+/** Path to a Stage-1 research brief; `name` is sanitized to a slug + confined to the job dir. */
+export function researchFile(workspaceDir: string, jobId: string, name: string): string {
+  const safe = slug(name);
+  return path.join(jobDir(workspaceDir, jobId), "research", `${safe}.json`);
+}
