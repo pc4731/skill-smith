@@ -1,4 +1,11 @@
-import type { Job, Meter, ScopeQuestion, StageKey, StageStatus } from "../types.js";
+import type {
+  Job,
+  Meter,
+  ResearchDomainState,
+  ScopeQuestion,
+  StageKey,
+  StageStatus,
+} from "../types.js";
 
 export interface ConsoleLine {
   stageKey: string;
@@ -29,6 +36,7 @@ export type JobAction =
   | { type: "question"; questions: ScopeQuestion[] }
   | { type: "error"; message: string }
   | { type: "done"; stageKey: StageKey }
+  | { type: "research"; domain: string; status: ResearchDomainState["status"]; summary?: ResearchDomainState["summary"]; error?: string }
   | { type: "connection"; status: ConnectionStatus };
 
 const MAX_LINES = 2000;
@@ -55,6 +63,8 @@ export function jobReducer(state: JobViewState, action: JobAction): JobViewState
       return { ...state, error: action.message };
     case "done":
       return state.job ? { ...state, job: patchStage(state.job, action.stageKey, "done") } : state;
+    case "research":
+      return state.job ? { ...state, job: upsertResearchDomain(state.job, action) } : state;
     case "connection":
       return { ...state, connection: action.status };
     default:
@@ -66,5 +76,28 @@ function patchStage(job: Job, key: StageKey, status: StageStatus): Job {
   return {
     ...job,
     stages: job.stages.map((s) => (s.key === key ? { ...s, status } : s)),
+  };
+}
+
+/** Add a research domain or update the matching one in place (keyed by domain name). */
+function upsertResearchDomain(
+  job: Job,
+  action: { domain: string; status: ResearchDomainState["status"]; summary?: ResearchDomainState["summary"]; error?: string },
+): Job {
+  const existing = job.research?.domains ?? [];
+  const idx = existing.findIndex((d) => d.domain === action.domain);
+  const patch: Partial<ResearchDomainState> = { status: action.status };
+  if (action.summary) patch.summary = action.summary;
+  if (action.error) patch.error = action.error;
+
+  let domains: ResearchDomainState[];
+  if (idx >= 0) {
+    domains = existing.map((d, i) => (i === idx ? { ...d, ...patch } : d));
+  } else {
+    domains = [...existing, { domain: action.domain, slug: action.domain, ...patch, status: action.status }];
+  }
+  return {
+    ...job,
+    research: { status: job.research?.status ?? "running", domains },
   };
 }

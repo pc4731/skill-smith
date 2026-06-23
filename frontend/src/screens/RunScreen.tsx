@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import { api } from "../api.js";
 import { Clarifier } from "../components/Clarifier.js";
 import { CostMeter } from "../components/CostMeter.js";
+import { ResearchCards } from "../components/ResearchCards.js";
 import { Stepper } from "../components/Stepper.js";
 import { StreamingConsole } from "../components/StreamingConsole.js";
 import { useJobStream } from "../hooks/useJobStream.js";
@@ -51,10 +52,11 @@ export function RunScreen() {
             />
           )}
 
-          {scopeDone && (
+          {job?.research && <ResearchCards research={job.research} />}
+
+          {scopeDone && !job?.research && (
             <div className="stage-done" role="status">
-              <strong>Stage 0 complete.</strong> The scope is saved. Stages 2–6 (Research → Package)
-              arrive in later phases.
+              <strong>Stage 0 complete.</strong> The scope is saved; research is starting.
             </div>
           )}
         </section>

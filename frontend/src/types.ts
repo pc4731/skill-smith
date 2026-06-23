@@ -57,6 +57,28 @@ export interface Scope {
   usedDefaults?: boolean;
 }
 
+export type ResearchDomainStatus = "pending" | "running" | "done" | "failed";
+
+export interface ResearchDomainState {
+  domain: string;
+  slug: string;
+  status: ResearchDomainStatus;
+  error?: string;
+  summary?: { keyApis: number; gotchas: number; sources: number };
+}
+
+export type ResearchStatus =
+  | "pending"
+  | "running"
+  | "done"
+  | "done_with_warnings"
+  | "failed";
+
+export interface ResearchState {
+  status: ResearchStatus;
+  domains: ResearchDomainState[];
+}
+
 export interface Job {
   id: string;
   kind: "skill" | "sayhi";
@@ -68,5 +90,6 @@ export interface Job {
   scope?: Scope;
   questions?: ScopeQuestion[];
   answers?: Record<string, string | string[]>;
+  research?: ResearchState;
   meter: Meter;
 }

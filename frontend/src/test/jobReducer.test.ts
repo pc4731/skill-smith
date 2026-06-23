@@ -53,6 +53,28 @@ describe("jobReducer", () => {
     expect(s.job?.questions?.length).toBe(1);
   });
 
+  it("adds a research domain then updates it in place", () => {
+    let s = jobReducer(initialState, { type: "job", job: baseJob() });
+    s = jobReducer(s, { type: "research", domain: "react", status: "running" });
+    expect(s.job?.research?.domains).toHaveLength(1);
+    expect(s.job?.research?.domains[0]?.status).toBe("running");
+
+    // same domain again -> updated in place (not duplicated), with summary
+    s = jobReducer(s, {
+      type: "research",
+      domain: "react",
+      status: "done",
+      summary: { keyApis: 2, gotchas: 1, sources: 3 },
+    });
+    expect(s.job?.research?.domains).toHaveLength(1);
+    expect(s.job?.research?.domains[0]?.status).toBe("done");
+    expect(s.job?.research?.domains[0]?.summary?.sources).toBe(3);
+
+    // a different domain appends
+    s = jobReducer(s, { type: "research", domain: "aem", status: "pending" });
+    expect(s.job?.research?.domains.map((d) => d.domain)).toEqual(["react", "aem"]);
+  });
+
   it("records errors and connection status", () => {
     let s = jobReducer(initialState, { type: "error", message: "boom" });
     expect(s.error).toBe("boom");
