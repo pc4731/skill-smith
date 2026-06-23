@@ -11,11 +11,22 @@ export function createRouter(ctx: AppContext): Router {
     res.json({ ok: true, model: ctx.config.model });
   });
 
+  // Process-wide daily invocation budget (for the UI cost meter / monitoring).
+  router.get("/budget", (_req, res) => {
+    res.json(ctx.budget.snapshot());
+  });
+
   // Create a job and kick off Stage 0 scoping (runs in the background).
   router.post("/jobs", async (req: Request, res: Response) => {
     const description = typeof req.body?.description === "string" ? req.body.description.trim() : "";
     if (!description) {
       res.status(400).json({ error: "description is required" });
+      return;
+    }
+    if (description.length > ctx.config.maxDescriptionLength) {
+      res.status(400).json({
+        error: `description too long (max ${ctx.config.maxDescriptionLength} characters)`,
+      });
       return;
     }
     const job = await ctx.jobStore.create({

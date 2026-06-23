@@ -2,6 +2,7 @@ import { ClaudeClient } from "./claude/claudeClient.js";
 import { loadConfig, type Config, type LoadOptions } from "./config/config.js";
 import { JobStore } from "./jobs/jobStore.js";
 import { SseHub } from "./sse/sseHub.js";
+import { GlobalBudget } from "./util/globalBudget.js";
 import { Semaphore } from "./util/semaphore.js";
 
 /** Everything the routes and stages depend on, wired once and injected. */
@@ -10,6 +11,7 @@ export interface AppContext {
   jobStore: JobStore;
   sse: SseHub;
   claude: ClaudeClient;
+  budget: GlobalBudget;
 }
 
 export interface BuildContextOptions extends LoadOptions {
@@ -22,10 +24,12 @@ export interface BuildContextOptions extends LoadOptions {
 export function buildContext(opts: BuildContextOptions = {}): AppContext {
   const config = opts.config ?? loadConfig(opts);
   const semaphore = new Semaphore(config.maxParallelism);
+  const budget = new GlobalBudget(config.globalDailyInvocationCeiling);
   return {
     config,
     jobStore: new JobStore(config.workspaceDir),
     sse: new SseHub(2000, opts.heartbeatMs ?? 15000),
-    claude: new ClaudeClient(config, semaphore),
+    claude: new ClaudeClient(config, semaphore, budget),
+    budget,
   };
 }

@@ -44,6 +44,9 @@ documented inline) and each is overridable by an environment variable:
 | `workspaceDir` | `SKILL_SMITH_WORKSPACE_DIR` | `./workspace` | Per-job artifact root. |
 | `maxParallelism` | `SKILL_SMITH_MAX_PARALLELISM` | `3` | Max concurrent claude invocations. |
 | `perJobInvocationCeiling` | `SKILL_SMITH_INVOCATION_CEILING` | `40` | Hard per-job invocation cap. |
+| `globalDailyInvocationCeiling` | `SKILL_SMITH_DAILY_INVOCATION_CEILING` | `0` | Process-wide claude calls/day (0 = unlimited). |
+| `maxDescriptionLength` | `SKILL_SMITH_MAX_DESCRIPTION_LENGTH` | `4000` | Max project-description length (chars). |
+| `host` | `SKILL_SMITH_HOST` | `127.0.0.1` | Bind interface. Localhost by default; `0.0.0.0` only behind a proxy/auth. |
 | `retry.maxRetries` | `SKILL_SMITH_RETRY_MAX` | `3` | Retry attempts for retryable failures. |
 | `retry.baseDelayMs` | `SKILL_SMITH_RETRY_BASE_DELAY_MS` | `1000` | Backoff base. |
 

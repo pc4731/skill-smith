@@ -1,5 +1,6 @@
 import { spawn } from "node:child_process";
 import type { Config } from "../config/config.js";
+import type { GlobalBudget } from "../util/globalBudget.js";
 import { Semaphore, sleep } from "../util/semaphore.js";
 import { NON_RETRYABLE_ERRORS, type ClaudeEvent, type ResultInfo } from "./events.js";
 import { StreamParser } from "./streamParser.js";
@@ -65,16 +66,12 @@ interface SpawnOutcome {
 export class ClaudeClient {
   private readonly semaphore: Semaphore;
 
-  constructor(private readonly config: Config, semaphore?: Semaphore) {
+  constructor(
+    private readonly config: Config,
+    semaphore?: Semaphore,
+    private readonly budget?: GlobalBudget,
+  ) {
     this.semaphore = semaphore ?? new Semaphore(config.maxParallelism);
-  }
-
-  private baseArgs(tools: string[] | undefined): string[] {
-    const args: string[] = ["-p"]; // prompt is appended by the caller-specific builder
-    if (this.config.bare) args.push("--bare");
-    if (this.config.model) args.push("--model", this.config.model);
-    if (tools && tools.length > 0) args.push("--allowed-tools", tools.join(","));
-    return args;
   }
 
   /** Streaming call (`--output-format stream-json`). Resolves once a clean result arrives. */
@@ -186,6 +183,10 @@ export class ClaudeClient {
     signal: AbortSignal | undefined,
     fn: () => Promise<T>,
   ): Promise<T> {
+    // Process-wide daily cost guardrail: reserve one invocation up front.
+    if (this.budget && !this.budget.tryConsume()) {
+      throw new ClaudeError("Global daily invocation budget reached", false);
+    }
     const max = this.config.retry.maxRetries;
     let attempt = 0;
     // eslint-disable-next-line no-constant-condition

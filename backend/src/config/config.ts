@@ -32,6 +32,13 @@ export const ConfigSchema = z.object({
   bare: z.boolean().default(false),
   claudeBin: z.string().min(1).default("claude"),
   workspaceDir: z.string().min(1).default("./workspace"),
+  /** Interface the backend binds to. Defaults to localhost so the cost-incurring
+   * API is not exposed on all interfaces; set to 0.0.0.0 only behind auth/a proxy. */
+  host: z.string().min(1).default("127.0.0.1"),
+  /** Reject project descriptions longer than this (chars) to bound prompt size/cost. */
+  maxDescriptionLength: z.number().int().min(1).default(4000),
+  /** Process-wide cap on claude invocations per UTC day (0 = unlimited). */
+  globalDailyInvocationCeiling: z.number().int().min(0).default(0),
   maxParallelism: z.number().int().min(1).default(3),
   perJobInvocationCeiling: z.number().int().min(1).default(40),
   retry: RetrySchema.default({}),
@@ -73,6 +80,11 @@ export function applyEnv(base: Config, env: NodeJS.ProcessEnv = process.env): Co
   if (b !== undefined) next.bare = b;
   if (env.SKILL_SMITH_CLAUDE_BIN) next.claudeBin = env.SKILL_SMITH_CLAUDE_BIN;
   if (env.SKILL_SMITH_WORKSPACE_DIR) next.workspaceDir = env.SKILL_SMITH_WORKSPACE_DIR;
+  if (env.SKILL_SMITH_HOST) next.host = env.SKILL_SMITH_HOST;
+  const maxDesc = num(env.SKILL_SMITH_MAX_DESCRIPTION_LENGTH);
+  if (maxDesc !== undefined) next.maxDescriptionLength = maxDesc;
+  const dailyCeil = num(env.SKILL_SMITH_DAILY_INVOCATION_CEILING);
+  if (dailyCeil !== undefined) next.globalDailyInvocationCeiling = dailyCeil;
   const par = num(env.SKILL_SMITH_MAX_PARALLELISM);
   if (par !== undefined) next.maxParallelism = par;
   const ceil = num(env.SKILL_SMITH_INVOCATION_CEILING);

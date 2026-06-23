@@ -12,6 +12,9 @@ services:
       dockerfile: Dockerfile
     environment:
       PORT: "4000"
+      # Bind all interfaces INSIDE the isolated compose network so the web (nginx)
+      # service can reach backend:4000. The backend port is NOT published to the host.
+      SKILL_SMITH_HOST: "0.0.0.0"
       # The CLI needs auth; bare mode uses ANTHROPIC_API_KEY directly.
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
       SKILL_SMITH_BARE: "true"
