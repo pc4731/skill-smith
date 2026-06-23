@@ -20,7 +20,9 @@ const RetrySchema = z.object({
 
 const ToolPermissionsSchema = z.object({
   scope: z.array(z.string()).default([]),
-  research: z.array(z.string()).default(["WebSearch", "WebFetch", "Read", "Bash"]),
+  // Research only needs to search + fetch and return a JSON brief. Deliberately NO Bash:
+  // an agent ingesting untrusted web content must not also hold shell execution (prompt-injection -> RCE).
+  research: z.array(z.string()).default(["WebSearch", "WebFetch"]),
   design: z.array(z.string()).default([]),
   generate: z.array(z.string()).default(["Read", "Write", "Edit", "Bash"]),
   test: z.array(z.string()).default(["Read", "Bash"]),

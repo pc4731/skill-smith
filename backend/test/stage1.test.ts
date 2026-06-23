@@ -34,9 +34,11 @@ describe("deriveDomains", () => {
 });
 
 describe("tool-permission contract", () => {
-  it("grants web tools only to the research stage", () => {
+  it("grants web tools only to the research stage, and never shell access", () => {
     const c = loadConfig({ skipFile: true, env: {} });
-    expect(toolsFor(c, "research")).toContain("WebSearch");
+    expect(toolsFor(c, "research")).toEqual(["WebSearch", "WebFetch"]);
+    // No Bash: an untrusted-content-ingesting research agent must not hold shell exec.
+    expect(toolsFor(c, "research")).not.toContain("Bash");
     expect(toolsFor(c, "scope")).toEqual([]);
   });
 });

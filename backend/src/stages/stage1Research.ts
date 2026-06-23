@@ -177,7 +177,7 @@ async function researchOneDomain(
     const res = await ctx.claude.structured({
       prompt: researchPrompt(targetStack, domain, answers),
       jsonSchema: RESEARCH_JSON_SCHEMA,
-      tools, // research-stage tools ONLY (WebSearch/WebFetch/Read/Bash)
+      tools, // research-stage tools ONLY (WebSearch/WebFetch — no Bash, no shell exec)
       cwd: ctx.jobStore.dir(jobId),
       onRaw: (chunk) => void ctx.jobStore.appendRaw(jobId, callId, chunk),
       onAttempt: (attempt, maxRetries, delayMs, reason) =>

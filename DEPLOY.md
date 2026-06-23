@@ -47,6 +47,16 @@ table in [README.md](README.md)). The important ones for a deploy:
 | `SKILL_SMITH_MAX_PARALLELISM` / `SKILL_SMITH_INVOCATION_CEILING` | Cost guardrails. |
 | `PORT` | Backend port (default 4000). |
 
+## Security note: Stage 1 web tools (SSRF)
+
+Stage 1 research grants the engine **`WebSearch` + `WebFetch`** (and nothing else — no Bash/shell).
+Because the model chooses which URLs to fetch, `WebFetch` is an inherent **SSRF** surface: it could be
+steered toward internal endpoints (cloud metadata `169.254.169.254`, `localhost`, RFC1918 ranges). The
+app cannot fully constrain this since the `claude` CLI performs the fetch. For any non-local or
+multi-tenant deployment, run the backend in a **network-egress-restricted sandbox**: allowlist outbound
+HTTP(S) and block link-local/metadata/RFC1918 destinations. Researched knowledge is persisted as static
+files (`research/<domain>.json`); no fetched URL is re-fetched or executed by later stages.
+
 ## CI
 
 `.github/workflows/ci.yml` runs on push/PR: `npm ci` → `npm run typecheck` → `npm run build` →

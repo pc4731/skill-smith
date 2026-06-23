@@ -29,7 +29,7 @@
 
   "toolPermissions": {
     "scope": [],
-    "research": ["WebSearch", "WebFetch", "Read", "Bash"],
+    "research": ["WebSearch", "WebFetch"],
     "design": [],
     "generate": ["Read", "Write", "Edit", "Bash"],
     "test": ["Read", "Bash"],
