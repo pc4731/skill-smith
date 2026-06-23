@@ -1,0 +1,36 @@
+# Skill Smith — backend (orchestrator/API/SSE) + web (static frontend via nginx).
+#
+#   ANTHROPIC_API_KEY=sk-... docker compose up --build
+#   open http://localhost:8080
+#
+# Secrets are read from the environment, never baked into images.
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      PORT: "4000"
+      # The CLI needs auth; bare mode uses ANTHROPIC_API_KEY directly.
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      SKILL_SMITH_BARE: "true"
+      SKILL_SMITH_MODEL: ${SKILL_SMITH_MODEL:-claude-opus-4-8}
+      SKILL_SMITH_MAX_PARALLELISM: ${SKILL_SMITH_MAX_PARALLELISM:-3}
+      SKILL_SMITH_INVOCATION_CEILING: ${SKILL_SMITH_INVOCATION_CEILING:-40}
+    volumes:
+      - ./workspace:/app/workspace
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:4000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
