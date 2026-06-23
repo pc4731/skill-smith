@@ -8,10 +8,11 @@ Skill Smith uses **Claude Code itself as its engine**: every research, generatio
 shells out to the `claude` CLI in headless mode (`claude -p`). The web app is a thin orchestration +
 live-display layer over that engine.
 
-> **Phased build.** This repository is being built in phases. **Phase 1 (current)** delivers the
-> foundation + Stage 0 (intake & clarification). Stages 1–5 (research → design → generation → self-test →
-> packaging) are tracked in [`.project/phases.md`](.project/phases.md) and land in later phases; the UI
-> shows them as *pending*.
+> **Phased build.** This repository is being built in phases. **Phases 1–2 are done**: the foundation +
+> Stage 0 (intake & clarification) and **Stage 1 (research)** — parallel per-domain `claude -p` research
+> producing versioned, cited briefs at `workspace/<job>/research/<domain>.json`. Stages 3–6 (design →
+> generation → self-test → packaging → polish) are tracked in [`.project/phases.md`](.project/phases.md)
+> and land in later phases; the UI shows them as *pending*.
 
 ## Prerequisites
 
@@ -62,6 +63,7 @@ workspace/<jobId>/
   job.json         # authoritative job + stage status + cost meter
   events.ndjson    # append-only stream of pipeline + claude events
   scope.json       # written when Stage 0 is answered
+  research/<domain>.json  # Stage 1: one versioned, cited research brief per domain
   raw/<callId>.ndjson  # raw claude output per invocation (for debugging / partial recovery)
 ```
 

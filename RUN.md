@@ -3,10 +3,10 @@
 Skill Smith is an npm-workspaces monorepo: a **Node + Express + TypeScript** backend (the orchestrator
 that shells out to the `claude` CLI and streams over SSE) and a **React + Vite + TypeScript** frontend.
 
-> **Phase status:** this is **Phase 1 — Foundation + Stage 0 (intake & clarification)**. The `claude -p`
-> wrapper, job store, SSE, cost meter, and the Stage-0 scoping/clarifier flow are live. **Stages 1–5
-> (Research → Design → Generate → Self-test → Package) are not implemented yet** and appear as *pending*
-> in the UI stepper. See [`.project/phases.md`](.project/phases.md).
+> **Phase status:** **Phases 1–2 are done.** Live: the `claude -p` wrapper, job store, SSE, cost meter,
+> the Stage-0 scoping/clarifier flow, and **Stage 1 research** (parallel per-domain research → versioned
+> briefs). **Stages 3–6 (Design → Generate → Self-test → Package → polish) are not implemented yet** and
+> appear as *pending* in the UI stepper. See [`.project/phases.md`](.project/phases.md).
 
 ## 1. Prerequisites
 
@@ -65,8 +65,24 @@ curl -s http://127.0.0.1:4000/api/jobs/<jobId>         # poll: status becomes "d
 2. The backend runs a scoping `claude -p --output-format json --json-schema` call and returns up to
    ~5 questions, rendered as selectable chips.
 3. Answer them and click **Submit answers**, or click **Use defaults**.
-4. The answered scope is written to `workspace/<jobId>/scope.json` and Stage 0 is marked done. The
-   pipeline does **not** advance past Stage 0 this phase.
+4. The answered scope is written to `workspace/<jobId>/scope.json` and Stage 0 is marked done, which
+   **auto-advances the job into Stage 1 research**.
+
+### c) Stage 1 — research
+
+Once Stage 0 is answered, the backend kicks off research automatically: one `claude -p` call **per
+knowledge domain** from the scope, run in parallel (bounded by `maxParallelism`) with the
+research-stage web tools (**`WebSearch` + `WebFetch`** only — no shell). Each domain produces a
+versioned, cited brief written to `workspace/<jobId>/research/<slug>.json`:
+
+```json
+{ "domain": "...", "key_apis": ["..."], "idioms": ["..."], "gotchas": ["..."],
+  "version_notes": "...", "sources": [{ "title": "...", "url": "..." }, { "title": "...", "url": "..." }] }
+```
+
+Per-domain status (and a compact summary) streams live to the UI research cards; a compact summary is
+also kept in `job.json` under `research`. If a domain fails, the others continue and the stage ends
+`done_with_warnings`. (Stages 3–6 remain pending.)
 
 API equivalent:
 
@@ -75,10 +91,13 @@ curl -s -X POST http://127.0.0.1:4000/api/jobs \
   -H 'content-type: application/json' \
   -d '{"description":"AEM project with React"}'        # -> {"id":"<jobId>"}
 
-# After status is "awaiting_input", answer (or use defaults):
+# After status is "awaiting_input", answer (or use defaults) — this auto-starts research:
 curl -s -X POST http://127.0.0.1:4000/api/jobs/<jobId>/answers \
   -H 'content-type: application/json' \
   -d '{"useDefaults":true}'
+
+# Re-run research for an already-answered job (202; 409 if scope unanswered or research running):
+curl -s -X POST http://127.0.0.1:4000/api/jobs/<jobId>/research
 ```
 
 ## 5. Where job artifacts land
@@ -91,6 +110,7 @@ workspace/<jobId>/
   job.json            # authoritative job + stage status + cost meter
   events.ndjson       # append-only stream of pipeline + claude events (SSE replay source)
   scope.json          # written when Stage 0 is answered
+  research/<slug>.json # Stage 1: one versioned, cited brief per knowledge domain
   raw/<callId>.ndjson # raw claude output per invocation (debugging / partial recovery)
 ```
 
