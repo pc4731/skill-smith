@@ -8,12 +8,13 @@ Skill Smith uses **Claude Code itself as its engine**: every research, generatio
 shells out to the `claude` CLI in headless mode (`claude -p`). The web app is a thin orchestration +
 live-display layer over that engine.
 
-> **Phased build.** This repository is being built in phases. **Phases 1–4 are done**: the foundation +
+> **Phased build.** This repository is being built in phases. **Phases 1–5 are done**: the foundation +
 > Stage 0 (intake), **Stage 1 (research)**, **Stage 2 (design)** with an approve gate, **Stage 3
-> (generation)** — each skill written to `workspace/<job>/skills/<slug>/`, and **Stage 4 (self-test)** —
-> trigger-reliability + capability grading with iterate-on-failure, results in `skills/<slug>/report.json`.
-> Stages 5–6 (packaging → polish) are tracked in [`.project/phases.md`](.project/phases.md) and land in
-> later phases; the UI shows them as *pending*.
+> (generation)** — each skill written to `workspace/<job>/skills/<slug>/`, **Stage 4 (self-test)** —
+> trigger-reliability + capability grading with iterate-on-failure (`skills/<slug>/report.json`), and
+> **Stage 5 (package + results)** — validate + safety-scan + zip each skill to a `.skill`, plus a results
+> screen with downloads + install hints. Stage 6 (polish/history/fixtures) is tracked in
+> [`.project/phases.md`](.project/phases.md) and lands in a later phase; the UI shows it as *pending*.
 
 ## Prerequisites
 
@@ -68,6 +69,7 @@ workspace/<jobId>/
   plan.json        # Stage 2: the approved skill-set plan
   skills/<slug>/   # Stage 3: one generated skill (SKILL.md + references/ + optional scripts/)
   skills/<slug>/report.json  # Stage 4: that skill's self-test report (trigger rate, capability score, pass/fail)
+  skills/<slug>.skill  # Stage 5: the packaged skill (zip); all-skills.zip bundles them; results.json holds per-skill results
   raw/<callId>.ndjson  # raw claude output per invocation (for debugging / partial recovery)
 ```
 

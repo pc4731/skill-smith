@@ -3,11 +3,12 @@
 Skill Smith is an npm-workspaces monorepo: a **Node + Express + TypeScript** backend (the orchestrator
 that shells out to the `claude` CLI and streams over SSE) and a **React + Vite + TypeScript** frontend.
 
-> **Phase status:** **Phases 1–4 are done.** Live: the `claude -p` wrapper, job store, SSE, cost meter,
+> **Phase status:** **Phases 1–5 are done.** Live: the `claude -p` wrapper, job store, SSE, cost meter,
 > Stage-0 scoping/clarifier, **Stage 1 research**, **Stage 2 design** (plan + approve gate), **Stage 3
-> generation** (writes each skill directory), and **Stage 4 self-test** (trigger reliability + capability
-> grading, with iterate-on-failure). **Stages 5–6 (Package → polish) are not implemented yet** and appear
-> as *pending* in the UI stepper. See [`.project/phases.md`](.project/phases.md).
+> generation** (writes each skill directory), **Stage 4 self-test** (trigger reliability + capability
+> grading, with iterate-on-failure), and **Stage 5 package + results** (validate + safety-scan + zip each
+> skill to a `.skill`, then a results screen with downloads). **Stage 6 (polish/history/fixtures) is not
+> implemented yet.** See [`.project/phases.md`](.project/phases.md).
 
 ## 1. Prerequisites
 
@@ -139,7 +140,35 @@ After generation, each skill is **self-tested** automatically:
 - A skill passes when its trigger rate clears the threshold **and** the capability grade passes. On
   failure (with iterations left) Skill Smith **re-generates the skill with the grader's feedback** and
   re-tests. Results land in `workspace/<job>/skills/<slug>/report.json` and stream to the UI self-test
-  cards; the stage ends `done`/`done_with_warnings`/`failed`. (Stages 5–6 remain pending.)
+  cards; the stage ends `done`/`done_with_warnings`/`failed`.
+
+### g) Stage 5 — package + results (the deliverable)
+
+After self-test, each skill is **packaged and delivered**. This stage is **deterministic** — it makes
+**no `claude` calls** (no API cost / no budget use). Per skill:
+
+- **Validate** the skill structurally (re-runs the Stage-3 `validateSkill`), then **safety-scan** its
+  files — a skill is shipped to and potentially run by a user, so any file containing a hardcoded
+  secret or an obvious shell-exfiltration/obfuscation pattern (e.g. `curl … | sh`) is **rejected, not
+  shipped**.
+- **Package** the skill directory into `workspace/<job>/skills/<slug>.skill` (a zip — uses
+  skill-creator's `package_skill.py` if present, otherwise a plain zip via the `archiver` dependency),
+  excluding internals (`.cap/`, `report.json`). All passing skills are also bundled into
+  `workspace/<job>/all-skills.zip`.
+- **Assemble** `workspace/<job>/results.json` (+ `job.results`): per-skill pass/fail, trigger rate,
+  capability score, cited **sources** (from the skill's research briefs), and **install hints**
+  (personal `~/.claude/skills/<slug>/` vs project `.claude/skills/<slug>/`).
+
+A skill that fails validation or the safety scan is marked `failed` and excluded; the stage ends
+`done`/`done_with_warnings`/`failed`, and the **job completes** (`status: done`). The **Results screen**
+shows one card per skill (pass/fail, trigger rate, capability score, a collapsible SKILL.md preview,
+sources, a **Download .skill** button, install hints) plus a **Download all** button, served by:
+
+- `GET /api/jobs/:id/skills/:slug/SKILL.md` — the skill's SKILL.md (preview text)
+- `GET /api/jobs/:id/skills/:slug/package` — the `.skill` archive
+- `GET /api/jobs/:id/download-all` — the combined zip
+
+(Stage 6 — polish/history/fixtures — remains pending.)
 
 ## 5. Where job artifacts land
 
@@ -155,6 +184,9 @@ workspace/<jobId>/
   plan.json           # Stage 2: the approved skill-set plan
   skills/<slug>/      # Stage 3: one generated skill (SKILL.md + references/ + optional scripts/)
   skills/<slug>/report.json  # Stage 4: that skill's self-test report (trigger rate, capability score, pass/fail)
+  skills/<slug>.skill # Stage 5: the packaged skill (a zip), excluding internals
+  all-skills.zip      # Stage 5: all delivered skills bundled ('Download all')
+  results.json        # Stage 5: assembled per-skill results (scores, sources, install hints)
   raw/<callId>.ndjson # raw claude output per invocation (debugging / partial recovery)
 ```
 
