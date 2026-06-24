@@ -10,6 +10,7 @@
  * json object (for --output-format json [+ --json-schema]).
  */
 import fs from "node:fs";
+import path from "node:path";
 
 const args = process.argv.slice(2);
 const mode = process.env.FAKE_CLAUDE_MODE || "ok";
@@ -66,8 +67,27 @@ if (outputFormat === "json") {
   };
   if (hasSchema) {
     const schemaArg = flagValue("--json-schema") || "";
+    const isDesign = schemaArg.includes("scopeBoundaries") || schemaArg.includes("sourceDomains");
     const isResearch = schemaArg.includes("key_apis") || schemaArg.includes("version_notes");
-    if (isResearch) {
+    if (isDesign) {
+      // Stage-2 skill-set plan (one-domain-per-skill, pushy descriptions).
+      out.structured_output = {
+        skills: [
+          {
+            name: "demo-skill-a",
+            description: "Use this skill whenever working with demo-domain-a — covers its APIs, idioms, and gotchas. Trigger on mentions of demo-domain-a, its components, or related tasks.",
+            scopeBoundaries: "Covers demo-domain-a only; not demo-domain-b.",
+            sourceDomains: ["demo-domain-a"],
+          },
+          {
+            name: "demo-skill-b",
+            description: "Use this skill whenever working with demo-domain-b — covers its APIs, idioms, and gotchas. Trigger on mentions of demo-domain-b or related tasks.",
+            scopeBoundaries: "Covers demo-domain-b only; not demo-domain-a.",
+            sourceDomains: ["demo-domain-b"],
+          },
+        ],
+      };
+    } else if (isResearch) {
       // Stage-1 research brief (valid against RESEARCH_JSON_SCHEMA, >= 2 sources).
       out.structured_output = {
         domain: "demo-domain",
@@ -105,6 +125,42 @@ if (mode === "nonretryable") {
     error: "invalid_request",
     session_id: "sess-err",
     total_cost_usd: 0,
+  });
+  process.exit(0);
+}
+
+// Stage-3 generation: write a real skill directory into the current working dir
+// (the wrapper spawns the CLI with cwd = workspace/<job>/skills/<slug>/).
+const streamPrompt = flagValue("-p") || "";
+if (streamPrompt.includes("[[SKILLGEN]]")) {
+  const m = streamPrompt.match(/SKILL_SLUG=([a-z0-9-]+)/);
+  const sk = m ? m[1] : "skill";
+  // A slug containing "fail" simulates a generation that produces no SKILL.md.
+  if (!sk.includes("fail")) {
+    const skillMd = [
+      "---",
+      `name: ${sk}`,
+      `description: Use this skill whenever working with ${sk}; it covers the canonical APIs, idioms, and gotchas. Trigger on mentions of ${sk}, its tools, or related tasks.`,
+      "---",
+      "",
+      `# ${sk}`,
+      "",
+      `Concise, imperative guidance for ${sk}. See references/overview.md for the heavy detail.`,
+      "",
+    ].join("\n");
+    fs.writeFileSync("SKILL.md", skillMd);
+    fs.mkdirSync("references", { recursive: true });
+    fs.writeFileSync(path.join("references", "overview.md"), `# ${sk} reference\n\nDetailed APIs and version notes for ${sk}.\n`);
+  }
+  emit({ type: "system", subtype: "init", session_id: "sess-gen", model: "claude-opus-4-8" });
+  emit({ type: "stream_event", event: { delta: { type: "text_delta", text: `wrote ${sk}` } } });
+  emit({
+    type: "result",
+    subtype: "success",
+    is_error: false,
+    session_id: "sess-gen",
+    total_cost_usd: 0.004,
+    usage: { input_tokens: 20, output_tokens: 10 },
   });
   process.exit(0);
 }

@@ -36,12 +36,8 @@ describe("Stage 0 scoping", () => {
 
     const after = await ctx.jobStore.get(job.id);
     expect(after?.stages.find((s) => s.key === "scope")?.status).toBe("done");
-    // Answering scope now auto-advances into Stage 1 research (Phase 2).
-    // Stages beyond research stay pending.
-    const beyondResearchPending = after?.stages
-      .filter((s) => s.key !== "scope" && s.key !== "research")
-      .every((s) => s.status === "pending");
-    expect(beyondResearchPending).toBe(true);
+    // Answering scope marks Stage 0 done; the pipeline then auto-advances
+    // (research -> design) in the background. We only assert the Stage-0 contract here.
   });
 
   it("use-defaults path fills answers from the first option / empty text", async () => {

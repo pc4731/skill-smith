@@ -5,6 +5,7 @@ import { slug } from "../jobs/jobPaths.js";
 import type { ResearchBrief, ResearchDomainState, ResearchState } from "../jobs/types.js";
 import { applyResult, ceilingReached } from "../meter/costMeter.js";
 import { emit, emitJob } from "../runtime/broadcast.js";
+import { runStage2 } from "./stage2Design.js";
 
 /** JSON schema handed to `claude -p --json-schema` for one domain's research brief. */
 export const RESEARCH_JSON_SCHEMA = {
@@ -152,6 +153,9 @@ export async function runStage1(ctx: AppContext, jobId: string): Promise<void> {
     status: finished.research?.status === "failed" ? "failed" : "done",
   });
   await emitJob(ctx, finished);
+
+  // Advance the pipeline into Stage 2 design (unless research wholly failed).
+  if (finished.research?.status !== "failed") void runStage2(ctx, jobId);
 }
 
 async function researchOneDomain(

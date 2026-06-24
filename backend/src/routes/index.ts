@@ -4,6 +4,7 @@ import { emitJob } from "../runtime/broadcast.js";
 import { runSayHi } from "../runtime/sayHi.js";
 import { applyAnswers, runStage0 } from "../stages/stage0Scope.js";
 import { runStage1 } from "../stages/stage1Research.js";
+import { applyPlan } from "../stages/stage2Design.js";
 
 export function createRouter(ctx: AppContext): Router {
   const router = Router();
@@ -111,6 +112,32 @@ export function createRouter(ctx: AppContext): Router {
     }
     void runStage1(ctx, req.params.id);
     res.status(202).json({ ok: true });
+  });
+
+  // Approve (or edit) the Stage-2 skill plan -> triggers Stage 3 generation.
+  router.post("/jobs/:id/plan", async (req, res) => {
+    const job = await ctx.jobStore.get(req.params.id);
+    if (!job) {
+      res.status(404).json({ error: "job not found" });
+      return;
+    }
+    if (!job.design || job.design.status !== "awaiting_approval") {
+      res.status(409).json({ error: "no skill plan awaiting approval" });
+      return;
+    }
+    if (job.generation?.status === "running") {
+      res.status(409).json({ error: "generation already running" });
+      return;
+    }
+    try {
+      const skills = await applyPlan(ctx, req.params.id, {
+        approve: req.body?.approve === true,
+        skills: req.body?.skills,
+      });
+      res.status(202).json({ ok: true, skills });
+    } catch (err) {
+      res.status(400).json({ error: err instanceof Error ? err.message : String(err) });
+    }
   });
 
   return router;

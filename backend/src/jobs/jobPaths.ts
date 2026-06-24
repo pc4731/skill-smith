@@ -57,3 +57,17 @@ export function researchFile(workspaceDir: string, jobId: string, name: string):
   const safe = slug(name);
   return path.join(jobDir(workspaceDir, jobId), "research", `${safe}.json`);
 }
+
+/** Stage-2 approved skill-set plan. */
+export function planFile(workspaceDir: string, jobId: string): string {
+  return path.join(jobDir(workspaceDir, jobId), "plan.json");
+}
+
+export function skillsDir(workspaceDir: string, jobId: string): string {
+  return path.join(jobDir(workspaceDir, jobId), "skills");
+}
+
+/** Stage-3 generated skill directory; `name` is sanitized to a slug + confined to the job dir. */
+export function skillDir(workspaceDir: string, jobId: string, name: string): string {
+  return path.join(skillsDir(workspaceDir, jobId), slug(name));
+}
