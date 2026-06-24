@@ -3,12 +3,12 @@
 Skill Smith is an npm-workspaces monorepo: a **Node + Express + TypeScript** backend (the orchestrator
 that shells out to the `claude` CLI and streams over SSE) and a **React + Vite + TypeScript** frontend.
 
-> **Phase status:** **Phases 1–5 are done.** Live: the `claude -p` wrapper, job store, SSE, cost meter,
-> Stage-0 scoping/clarifier, **Stage 1 research**, **Stage 2 design** (plan + approve gate), **Stage 3
-> generation** (writes each skill directory), **Stage 4 self-test** (trigger reliability + capability
-> grading, with iterate-on-failure), and **Stage 5 package + results** (validate + safety-scan + zip each
-> skill to a `.skill`, then a results screen with downloads). **Stage 6 (polish/history/fixtures) is not
-> implemented yet.** See [`.project/phases.md`](.project/phases.md).
+> **Phase status:** **All 6 phases are complete** — the full pipeline runs end-to-end: the `claude -p`
+> wrapper, job store, SSE, cost meter, Stage-0 scoping/clarifier, Stage 1 research, Stage 2 design (plan +
+> approve gate), Stage 3 generation, Stage 4 self-test (trigger reliability + capability grading, with
+> iterate-on-failure), Stage 5 package + results (validate + safety-scan + zip to `.skill` + downloads),
+> and Phase 6 polish: **re-runnable job History, restart reconciliation, the cost/call meter, and a
+> committed example job**. See [`.project/phases.md`](.project/phases.md).
 
 ## 1. Prerequisites
 
@@ -195,6 +195,14 @@ run (generated with the mock CLI, no secrets) so a fresh clone can browse a fini
 (`job.json`, `scope.json`, `research/`, `plan.json`, `skills/<slug>/` + `.skill`, `results.json`)
 without running the pipeline. It is a static sample, not a live job (it is not listed by the History
 API, which only reads top-level workspace job dirs).
+
+### History & re-run
+
+- `GET /api/jobs` — compact, newest-first summaries (the **History** screen).
+- `POST /api/jobs/:id/rerun` — start a fresh job from a past job's description (carries the answered
+  scope to skip the clarifier); the source is never modified. → `202 { id }`.
+- On startup the server **reconciles orphans**: jobs left mid-stage by a previous process are marked
+  `failed` (no perpetual spinners); jobs parked awaiting your input/approval are left resumable.
 
 ## 6. Test
 
