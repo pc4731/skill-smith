@@ -5,6 +5,7 @@ import type {
   Meter,
   ResearchDomainState,
   ScopeQuestion,
+  SelfTestSkill,
   StageKey,
   StageStatus,
 } from "../types.js";
@@ -41,6 +42,7 @@ export type JobAction =
   | { type: "research"; domain: string; status: ResearchDomainState["status"]; summary?: ResearchDomainState["summary"]; error?: string }
   | { type: "design"; status: DesignState["status"]; skills?: DesignState["skills"] }
   | { type: "skill"; name: string; slug: string; status: GeneratedSkill["status"]; validation?: GeneratedSkill["validation"]; error?: string }
+  | { type: "report"; name: string; slug: string; status: SelfTestSkill["status"]; triggerRate?: number; falseTriggerRate?: number; capabilityScore?: number; passed?: boolean; error?: string }
   | { type: "connection"; status: ConnectionStatus };
 
 const MAX_LINES = 2000;
@@ -81,6 +83,8 @@ export function jobReducer(state: JobViewState, action: JobAction): JobViewState
         : state;
     case "skill":
       return state.job ? { ...state, job: upsertGeneratedSkill(state.job, action) } : state;
+    case "report":
+      return state.job ? { ...state, job: upsertSelfTestSkill(state.job, action) } : state;
     case "connection":
       return { ...state, connection: action.status };
     default:
@@ -136,4 +140,27 @@ function upsertGeneratedSkill(
     skills = [...existing, { name: action.name, slug: action.slug, status: action.status, ...patch }];
   }
   return { ...job, generation: { status: job.generation?.status ?? "running", skills } };
+}
+
+/** Add or update a self-test skill in place (keyed by slug). */
+function upsertSelfTestSkill(
+  job: Job,
+  action: { name: string; slug: string; status: SelfTestSkill["status"]; triggerRate?: number; falseTriggerRate?: number; capabilityScore?: number; passed?: boolean; error?: string },
+): Job {
+  const existing = job.selftest?.skills ?? [];
+  const idx = existing.findIndex((s) => s.slug === action.slug);
+  const patch: Partial<SelfTestSkill> = { status: action.status };
+  if (action.triggerRate !== undefined) patch.triggerRate = action.triggerRate;
+  if (action.falseTriggerRate !== undefined) patch.falseTriggerRate = action.falseTriggerRate;
+  if (action.capabilityScore !== undefined) patch.capabilityScore = action.capabilityScore;
+  if (action.passed !== undefined) patch.passed = action.passed;
+  if (action.error) patch.error = action.error;
+
+  let skills: SelfTestSkill[];
+  if (idx >= 0) {
+    skills = existing.map((s, i) => (i === idx ? { ...s, ...patch } : s));
+  } else {
+    skills = [...existing, { name: action.name, slug: action.slug, status: action.status, ...patch }];
+  }
+  return { ...job, selftest: { status: job.selftest?.status ?? "running", skills } };
 }

@@ -115,6 +115,25 @@ export interface GenerationState {
   skills: GeneratedSkill[];
 }
 
+// ---- Stage 4: self-test ----
+export type SelfTestSkillStatus = "pending" | "running" | "done" | "failed";
+export interface SelfTestSkill {
+  name: string;
+  slug: string;
+  status: SelfTestSkillStatus;
+  triggerRate?: number;
+  falseTriggerRate?: number;
+  capabilityScore?: number;
+  passed?: boolean;
+  iterations?: number;
+  error?: string;
+}
+export type SelfTestStatus = "pending" | "running" | "done" | "done_with_warnings" | "failed";
+export interface SelfTestState {
+  status: SelfTestStatus;
+  skills: SelfTestSkill[];
+}
+
 export interface Job {
   id: string;
   kind: "skill" | "sayhi";
@@ -129,5 +148,6 @@ export interface Job {
   research?: ResearchState;
   design?: DesignState;
   generation?: GenerationState;
+  selftest?: SelfTestState;
   meter: Meter;
 }

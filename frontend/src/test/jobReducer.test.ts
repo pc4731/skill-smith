@@ -98,6 +98,16 @@ describe("jobReducer", () => {
     expect(s.job?.generation?.skills[0]?.status).toBe("done");
   });
 
+  it("upserts self-test reports by slug", () => {
+    let s = jobReducer(initialState, { type: "job", job: baseJob() });
+    s = jobReducer(s, { type: "report", name: "a", slug: "a", status: "running" });
+    expect(s.job?.selftest?.skills[0]?.status).toBe("running");
+    s = jobReducer(s, { type: "report", name: "a", slug: "a", status: "done", triggerRate: 1, capabilityScore: 0.9, passed: true });
+    expect(s.job?.selftest?.skills).toHaveLength(1); // updated in place
+    expect(s.job?.selftest?.skills[0]?.passed).toBe(true);
+    expect(s.job?.selftest?.skills[0]?.triggerRate).toBe(1);
+  });
+
   it("records errors and connection status", () => {
     let s = jobReducer(initialState, { type: "error", message: "boom" });
     expect(s.error).toBe("boom");
