@@ -3,10 +3,11 @@
 Skill Smith is an npm-workspaces monorepo: a **Node + Express + TypeScript** backend (the orchestrator
 that shells out to the `claude` CLI and streams over SSE) and a **React + Vite + TypeScript** frontend.
 
-> **Phase status:** **Phases 1–2 are done.** Live: the `claude -p` wrapper, job store, SSE, cost meter,
-> the Stage-0 scoping/clarifier flow, and **Stage 1 research** (parallel per-domain research → versioned
-> briefs). **Stages 3–6 (Design → Generate → Self-test → Package → polish) are not implemented yet** and
-> appear as *pending* in the UI stepper. See [`.project/phases.md`](.project/phases.md).
+> **Phase status:** **Phases 1–3 are done.** Live: the `claude -p` wrapper, job store, SSE, cost meter,
+> Stage-0 scoping/clarifier, **Stage 1 research** (parallel per-domain → versioned briefs), **Stage 2
+> design** (skill-set plan + approve gate) and **Stage 3 generation** (writes each skill directory).
+> **Stages 4–6 (Self-test → Package → polish) are not implemented yet** and appear as *pending* in the
+> UI stepper. See [`.project/phases.md`](.project/phases.md).
 
 ## 1. Prerequisites
 
@@ -100,6 +101,30 @@ curl -s -X POST http://127.0.0.1:4000/api/jobs/<jobId>/answers \
 curl -s -X POST http://127.0.0.1:4000/api/jobs/<jobId>/research
 ```
 
+### d) Stage 2 — design (skill-set plan + approve gate)
+
+When research finishes, the backend proposes a **skill-set plan** (one-domain-per-skill, split by
+variant, with load-bearing "pushy" descriptions) and **parks for your approval** (`design.status =
+awaiting_approval`). In the UI, review the proposed skills and click **Approve & generate**.
+
+```bash
+# After research is done the job parks awaiting plan approval; approve it (or pass edited skills[]):
+curl -s -X POST http://127.0.0.1:4000/api/jobs/<jobId>/plan \
+  -H 'content-type: application/json' -d '{"approve":true}'
+# -> 202; writes plan.json and auto-starts generation. 409 if no plan awaiting / generation running.
+```
+
+### e) Stage 3 — generation
+
+After approval, Skill Smith generates **one directory per skill** under
+`workspace/<jobId>/skills/<slug>/` — `SKILL.md` (YAML frontmatter `name`+`description` + a lean body),
+`references/*.md` (heavy detail), and `scripts/` only where a deterministic helper beats prose. The
+generation engine uses **`Read`/`Write`/`Edit`** tools only (no Bash, no web). Each skill is then
+**deterministically validated** against the ground-truth rules: frontmatter `name`+`description`
+present, `description` ≤ 1536 chars, a lean body, and `references/` present. A skill that fails
+validation is kept for inspection and the stage ends `done_with_warnings`. Per-skill status streams to
+the UI skill cards. (Stages 4–6 remain pending.)
+
 ## 5. Where job artifacts land
 
 Everything is persisted on disk under `workspace/<jobId>/`, so a browser refresh or a server restart
@@ -111,6 +136,8 @@ workspace/<jobId>/
   events.ndjson       # append-only stream of pipeline + claude events (SSE replay source)
   scope.json          # written when Stage 0 is answered
   research/<slug>.json # Stage 1: one versioned, cited brief per knowledge domain
+  plan.json           # Stage 2: the approved skill-set plan
+  skills/<slug>/      # Stage 3: one generated skill (SKILL.md + references/ + optional scripts/)
   raw/<callId>.ndjson # raw claude output per invocation (debugging / partial recovery)
 ```
 
