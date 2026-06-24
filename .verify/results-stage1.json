@@ -1,0 +1,54 @@
+{
+  "at": "2026-06-24T03:52:41.376Z",
+  "base": "http://127.0.0.1:4556",
+  "checks": [
+    {
+      "name": "backend boots",
+      "target": "GET /api/health",
+      "result": "PASS",
+      "detail": "model=claude-opus-4-8"
+    },
+    {
+      "name": "Stage 0 awaiting input",
+      "target": "POST /api/jobs",
+      "result": "PASS",
+      "detail": "questions=3"
+    },
+    {
+      "name": "Stage 1 research completes",
+      "target": "job.research.status",
+      "result": "PASS",
+      "detail": "status=done domains=2"
+    },
+    {
+      "name": "all domains done",
+      "target": "research.domains",
+      "result": "PASS",
+      "detail": "domains=done,done"
+    },
+    {
+      "name": "Research stepper step done",
+      "target": "job.stages",
+      "result": "PASS",
+      "detail": "research stage=done"
+    },
+    {
+      "name": "brief files written + valid",
+      "target": "research/<slug>.json",
+      "result": "PASS",
+      "detail": "demo-domain-a:ok demo-domain-b:ok"
+    },
+    {
+      "name": "meter counted research calls",
+      "target": "job.meter.calls",
+      "result": "PASS",
+      "detail": "calls=3 domains=2"
+    },
+    {
+      "name": "research re-trigger endpoint",
+      "target": "POST /api/jobs/:id/research",
+      "result": "PASS",
+      "detail": "status=202"
+    }
+  ]
+}
