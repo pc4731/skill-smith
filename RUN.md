@@ -3,11 +3,11 @@
 Skill Smith is an npm-workspaces monorepo: a **Node + Express + TypeScript** backend (the orchestrator
 that shells out to the `claude` CLI and streams over SSE) and a **React + Vite + TypeScript** frontend.
 
-> **Phase status:** **Phases 1–3 are done.** Live: the `claude -p` wrapper, job store, SSE, cost meter,
-> Stage-0 scoping/clarifier, **Stage 1 research** (parallel per-domain → versioned briefs), **Stage 2
-> design** (skill-set plan + approve gate) and **Stage 3 generation** (writes each skill directory).
-> **Stages 4–6 (Self-test → Package → polish) are not implemented yet** and appear as *pending* in the
-> UI stepper. See [`.project/phases.md`](.project/phases.md).
+> **Phase status:** **Phases 1–4 are done.** Live: the `claude -p` wrapper, job store, SSE, cost meter,
+> Stage-0 scoping/clarifier, **Stage 1 research**, **Stage 2 design** (plan + approve gate), **Stage 3
+> generation** (writes each skill directory), and **Stage 4 self-test** (trigger reliability + capability
+> grading, with iterate-on-failure). **Stages 5–6 (Package → polish) are not implemented yet** and appear
+> as *pending* in the UI stepper. See [`.project/phases.md`](.project/phases.md).
 
 ## 1. Prerequisites
 
@@ -123,7 +123,23 @@ generation engine uses **`Read`/`Write`/`Edit`** tools only (no Bash, no web). E
 **deterministically validated** against the ground-truth rules: frontmatter `name`+`description`
 present, `description` ≤ 1536 chars, a lean body, and `references/` present. A skill that fails
 validation is kept for inspection and the stage ends `done_with_warnings`. Per-skill status streams to
-the UI skill cards. (Stages 4–6 remain pending.)
+the UI skill cards.
+
+### f) Stage 4 — self-test (the differentiator)
+
+After generation, each skill is **self-tested** automatically:
+
+- **Trigger reliability:** Skill Smith generates realistic prompts that *should* and *should not* load
+  the skill, then a fresh judge (given only the skills' name+description) decides which it would load,
+  over `selfTest.trials` runs. If the trigger rate is under `selfTest.triggerThreshold`, the description
+  is **rewritten and re-tested** (capped by `selfTest.maxIterations`).
+- **Capability grading:** a fresh agent runs a representative task **with the skill loaded** (using the
+  test tools `Read`/`Write`/`Edit` — no Bash, no web), and a separate grader scores the output 0–1
+  against assertions derived from the research briefs.
+- A skill passes when its trigger rate clears the threshold **and** the capability grade passes. On
+  failure (with iterations left) Skill Smith **re-generates the skill with the grader's feedback** and
+  re-tests. Results land in `workspace/<job>/skills/<slug>/report.json` and stream to the UI self-test
+  cards; the stage ends `done`/`done_with_warnings`/`failed`. (Stages 5–6 remain pending.)
 
 ## 5. Where job artifacts land
 
@@ -138,6 +154,7 @@ workspace/<jobId>/
   research/<slug>.json # Stage 1: one versioned, cited brief per knowledge domain
   plan.json           # Stage 2: the approved skill-set plan
   skills/<slug>/      # Stage 3: one generated skill (SKILL.md + references/ + optional scripts/)
+  skills/<slug>/report.json  # Stage 4: that skill's self-test report (trigger rate, capability score, pass/fail)
   raw/<callId>.ndjson # raw claude output per invocation (debugging / partial recovery)
 ```
 
@@ -168,7 +185,10 @@ overridable by an environment variable. Copy [`.env.example`](.env.example) to `
 | `host` | `SKILL_SMITH_HOST` | `127.0.0.1` | Bind interface. `0.0.0.0` only behind a proxy/auth. |
 | `workspaceDir` | `SKILL_SMITH_WORKSPACE_DIR` | `./workspace` | Per-job artifact root. |
 | `maxParallelism` | `SKILL_SMITH_MAX_PARALLELISM` | `3` | Max concurrent claude invocations. |
-| `perJobInvocationCeiling` | `SKILL_SMITH_INVOCATION_CEILING` | `40` | Hard per-job invocation cap. |
+| `perJobInvocationCeiling` | `SKILL_SMITH_INVOCATION_CEILING` | `150` | Hard per-job invocation cap (raised for the invocation-heavy Stage 4). |
+| `selfTest.triggerThreshold` | `SKILL_SMITH_TRIGGER_THRESHOLD` | `0.8` | Min trigger rate a skill must clear in Stage 4. |
+| `selfTest.trials` | `SKILL_SMITH_SELFTEST_TRIALS` | `3` | Judge runs per trigger prompt. |
+| `selfTest.maxIterations` | `SKILL_SMITH_SELFTEST_MAX_ITERATIONS` | `3` | Cap on rewrite/re-generate self-test iterations. |
 | `globalDailyInvocationCeiling` | `SKILL_SMITH_DAILY_INVOCATION_CEILING` | `0` | Process-wide claude calls/day (`0` = unlimited). |
 | `maxDescriptionLength` | `SKILL_SMITH_MAX_DESCRIPTION_LENGTH` | `4000` | Max project-description length. |
 | `retry.maxRetries` | `SKILL_SMITH_RETRY_MAX` | `3` | Retry attempts for retryable failures. |
