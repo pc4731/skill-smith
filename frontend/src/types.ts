@@ -22,6 +22,19 @@ export type StageStatus =
 
 export type JobStatus = "active" | "awaiting_input" | "done" | "failed";
 
+/** Compact job row for the history list (matches backend JobSummary). */
+export interface JobSummary {
+  id: string;
+  kind: "skill" | "sayhi";
+  description: string;
+  status: JobStatus;
+  createdAt: string;
+  updatedAt: string;
+  skillCount: number;
+  cost: number;
+  calls: number;
+}
+
 export interface StageState {
   key: StageKey;
   status: StageStatus;

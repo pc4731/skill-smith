@@ -306,6 +306,21 @@ a {
   gap: var(--space-3);
 }
 
+/* History list polish */
+.history-item { display: flex; align-items: center; gap: var(--space-3); }
+.history-main { flex: 1; display: flex; flex-direction: column; gap: 2px; text-decoration: none; color: inherit; }
+.history-meta { display: flex; gap: var(--space-3); font-size: var(--text-xs); color: var(--color-text-muted); }
+.history-rerun { flex-shrink: 0; }
+.history-status.status-done { color: var(--color-success); }
+.history-status.status-failed { color: var(--color-danger); }
+.history-status.status-active { color: var(--color-accent); }
+.history-status.status-awaiting_input { color: var(--color-warning); }
+
+/* Cost meter ceiling bar */
+.cost-bar { display: inline-block; width: 64px; height: 6px; background: var(--color-border); border-radius: var(--radius-sm); overflow: hidden; }
+.cost-bar-fill { display: block; height: 100%; background: var(--color-accent); transition: width 0.3s ease; }
+.cost-meter-over .cost-bar-fill { background: var(--color-danger); }
+
 /* Research cards */
 .research-title {
   font-size: var(--text-lg);

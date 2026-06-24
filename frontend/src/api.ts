@@ -1,4 +1,4 @@
-import type { Job, Scope } from "./types.js";
+import type { Job, JobSummary, Scope } from "./types.js";
 
 async function jsonFetch<T>(url: string, init?: RequestInit): Promise<T> {
   const res = await fetch(url, {
@@ -28,8 +28,11 @@ export const api = {
   getJob(id: string): Promise<Job> {
     return jsonFetch(`/api/jobs/${id}`);
   },
-  listJobs(): Promise<Job[]> {
+  listJobs(): Promise<JobSummary[]> {
     return jsonFetch("/api/jobs");
+  },
+  rerunJob(id: string): Promise<{ id: string }> {
+    return jsonFetch(`/api/jobs/${id}/rerun`, { method: "POST" });
   },
   submitAnswers(
     id: string,
