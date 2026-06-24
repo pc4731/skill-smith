@@ -76,3 +76,18 @@ export function skillDir(workspaceDir: string, jobId: string, name: string): str
 export function reportFile(workspaceDir: string, jobId: string, name: string): string {
   return path.join(skillDir(workspaceDir, jobId, name), "report.json");
 }
+
+/** Stage-5 packaged skill (a .skill zip), slug-confined. */
+export function packagePath(workspaceDir: string, jobId: string, name: string): string {
+  return path.join(skillsDir(workspaceDir, jobId), `${slug(name)}.skill`);
+}
+
+/** Stage-5 combined 'download all' archive. */
+export function allPackagePath(workspaceDir: string, jobId: string): string {
+  return path.join(jobDir(workspaceDir, jobId), "all-skills.zip");
+}
+
+/** Stage-5 assembled results. */
+export function resultsFile(workspaceDir: string, jobId: string): string {
+  return path.join(jobDir(workspaceDir, jobId), "results.json");
+}

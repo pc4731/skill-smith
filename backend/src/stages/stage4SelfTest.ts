@@ -106,6 +106,12 @@ export async function runStage4(ctx: AppContext, jobId: string): Promise<void> {
 
   await emit(ctx, jobId, "stage", { stageKey: "test", status: finished.selftest?.status === "failed" ? "failed" : "done" });
   await emitJob(ctx, finished);
+
+  // Advance into Stage 5 packaging (unless self-test wholly failed).
+  if (finished.selftest?.status !== "failed") {
+    const { runStage5 } = await import("./stage5Package.js");
+    void runStage5(ctx, jobId);
+  }
 }
 
 async function selfTestOne(ctx: AppContext, jobId: string, skill: SkillPlanItem): Promise<void> {

@@ -162,6 +162,29 @@ export interface SkillReport {
   prompts: { shouldTrigger: string[]; shouldNot: string[] };
 }
 
+// ---- Stage 5: package + results ----
+export interface ResultSkill {
+  name: string;
+  slug: string;
+  passed: boolean;
+  triggerRate?: number;
+  capabilityScore?: number;
+  descriptionChars: number;
+  bodyLines: number;
+  sources: ResearchSource[];
+  packageRelPath?: string;
+  installHints: { personal: string; project: string };
+  error?: string;
+}
+
+export type ResultsStatus = "pending" | "running" | "done" | "done_with_warnings" | "failed";
+
+export interface ResultsState {
+  status: ResultsStatus;
+  skills: ResultSkill[];
+  packageAllRelPath?: string;
+}
+
 export interface Job {
   id: string;
   kind: JobKind;
@@ -177,5 +200,6 @@ export interface Job {
   design?: DesignState;
   generation?: GenerationState;
   selftest?: SelfTestState;
+  results?: ResultsState;
   meter: Meter;
 }

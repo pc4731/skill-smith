@@ -1,10 +1,13 @@
+import fs from "node:fs";
 import { Router, type Request, type Response } from "express";
 import type { AppContext } from "../context.js";
+import { allPackagePath, isValidJobId, packagePath, skillDir } from "../jobs/jobPaths.js";
 import { emitJob } from "../runtime/broadcast.js";
 import { runSayHi } from "../runtime/sayHi.js";
 import { applyAnswers, runStage0 } from "../stages/stage0Scope.js";
 import { runStage1 } from "../stages/stage1Research.js";
 import { applyPlan } from "../stages/stage2Design.js";
+import path from "node:path";
 
 export function createRouter(ctx: AppContext): Router {
   const router = Router();
@@ -112,6 +115,38 @@ export function createRouter(ctx: AppContext): Router {
     }
     void runStage1(ctx, req.params.id);
     res.status(202).json({ ok: true });
+  });
+
+  // ---- Stage 5 downloads (slug/path-confined; 404 on missing) ----
+  router.get("/jobs/:id/skills/:slug/SKILL.md", (req, res) => {
+    if (!isValidJobId(req.params.id)) return void res.status(404).json({ error: "not found" });
+    let file: string;
+    try {
+      file = path.join(skillDir(ctx.config.workspaceDir, req.params.id, req.params.slug), "SKILL.md");
+    } catch {
+      return void res.status(404).json({ error: "not found" });
+    }
+    if (!fs.existsSync(file)) return void res.status(404).json({ error: "not found" });
+    res.type("text/markdown").send(fs.readFileSync(file, "utf8"));
+  });
+
+  router.get("/jobs/:id/skills/:slug/package", (req, res) => {
+    if (!isValidJobId(req.params.id)) return void res.status(404).json({ error: "not found" });
+    let file: string;
+    try {
+      file = packagePath(ctx.config.workspaceDir, req.params.id, req.params.slug);
+    } catch {
+      return void res.status(404).json({ error: "not found" });
+    }
+    if (!fs.existsSync(file)) return void res.status(404).json({ error: "not packaged" });
+    res.download(file, path.basename(file));
+  });
+
+  router.get("/jobs/:id/download-all", (req, res) => {
+    if (!isValidJobId(req.params.id)) return void res.status(404).json({ error: "not found" });
+    const file = allPackagePath(ctx.config.workspaceDir, req.params.id);
+    if (!fs.existsSync(file)) return void res.status(404).json({ error: "not packaged" });
+    res.download(file, `${req.params.id}-skills.zip`);
   });
 
   // Approve (or edit) the Stage-2 skill plan -> triggers Stage 3 generation.
