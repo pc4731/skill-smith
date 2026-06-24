@@ -2,7 +2,7 @@ import { useEffect, useReducer } from "react";
 import { api } from "../api.js";
 import { initialState, jobReducer, type JobAction } from "../state/jobReducer.js";
 
-const SSE_EVENTS = ["job", "stage", "log", "meter", "question", "research", "design", "skill", "report", "retry", "error", "done"] as const;
+const SSE_EVENTS = ["job", "stage", "log", "meter", "question", "research", "design", "skill", "report", "results", "retry", "error", "done"] as const;
 
 /**
  * Subscribe to a job by id. On mount it SEEDS state from GET /api/jobs/:id (so a
@@ -75,6 +75,8 @@ function toAction(name: (typeof SSE_EVENTS)[number], data: any): JobAction {
       return { type: "skill", name: data.name, slug: data.slug, status: data.status, validation: data.validation, error: data.error };
     case "report":
       return { type: "report", name: data.name, slug: data.slug, status: data.status, triggerRate: data.triggerRate, falseTriggerRate: data.falseTriggerRate, capabilityScore: data.capabilityScore, passed: data.passed, error: data.error };
+    case "results":
+      return { type: "results", status: data.status, skills: data.skills ?? [], packageAllRelPath: data.packageAllRelPath };
     case "done":
       return { type: "done", stageKey: data.stageKey };
     case "retry":

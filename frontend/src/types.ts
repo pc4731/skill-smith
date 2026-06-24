@@ -134,6 +134,32 @@ export interface SelfTestState {
   skills: SelfTestSkill[];
 }
 
+export interface ResearchSource {
+  title: string;
+  url: string;
+}
+
+// ---- Stage 5: package + results ----
+export interface ResultSkill {
+  name: string;
+  slug: string;
+  passed: boolean;
+  triggerRate?: number;
+  capabilityScore?: number;
+  descriptionChars: number;
+  bodyLines: number;
+  sources: ResearchSource[];
+  packageRelPath?: string;
+  installHints: { personal: string; project: string };
+  error?: string;
+}
+export type ResultsStatus = "pending" | "running" | "done" | "done_with_warnings" | "failed";
+export interface ResultsState {
+  status: ResultsStatus;
+  skills: ResultSkill[];
+  packageAllRelPath?: string;
+}
+
 export interface Job {
   id: string;
   kind: "skill" | "sayhi";
@@ -149,5 +175,6 @@ export interface Job {
   design?: DesignState;
   generation?: GenerationState;
   selftest?: SelfTestState;
+  results?: ResultsState;
   meter: Meter;
 }

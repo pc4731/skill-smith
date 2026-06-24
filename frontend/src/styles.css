@@ -425,6 +425,52 @@ a {
 .stc-metrics dd { margin: 0; font-family: var(--font-mono); font-weight: 600; font-size: var(--text-sm); }
 .stc-error { color: var(--color-danger); font-size: var(--text-sm); margin: var(--space-2) 0 0; }
 
+/* Results view */
+.results-header { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); margin: var(--space-4) 0 var(--space-2); }
+.results-title { font-size: var(--text-lg); margin: 0; }
+.results-warn { color: var(--color-warning); font-size: var(--text-sm); font-weight: 400; }
+.result-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: var(--space-3); }
+.result-card {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  background: var(--color-surface);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.result-card.rv-pass { border-color: var(--color-success); }
+.result-card.rv-fail { border-color: var(--color-danger); }
+.rv-head { display: flex; align-items: baseline; gap: var(--space-2); }
+.rv-pass .rv-icon { color: var(--color-success); }
+.rv-fail .rv-icon { color: var(--color-danger); }
+.rv-name { font-weight: 600; flex: 1; word-break: break-word; }
+.rv-badge { font-size: var(--text-xs); color: var(--color-text-muted); }
+.rv-metrics { display: flex; gap: var(--space-4); margin: 0; }
+.rv-metrics div { display: flex; flex-direction: column; }
+.rv-metrics dt { font-size: var(--text-xs); color: var(--color-text-muted); }
+.rv-metrics dd { margin: 0; font-family: var(--font-mono); font-weight: 600; font-size: var(--text-sm); }
+.rv-error { color: var(--color-danger); font-size: var(--text-sm); margin: 0; }
+.rv-sources summary, .rv-preview summary { cursor: pointer; font-size: var(--text-sm); color: var(--color-text-muted); }
+.rv-sources ul { margin: var(--space-2) 0 0; padding-left: var(--space-5); }
+.rv-md {
+  background: var(--color-console);
+  color: var(--color-text);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  padding: var(--space-2);
+  border-radius: var(--radius-sm);
+  max-height: 240px;
+  overflow: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+  margin: var(--space-2) 0 0;
+}
+.rv-install { font-size: var(--text-xs); color: var(--color-text-muted); }
+.rv-install code { font-family: var(--font-mono); color: var(--color-text); }
+.rv-hint-label { color: var(--color-text-faint); }
+.rv-download { align-self: flex-start; text-decoration: none; }
+
 .stage-done {
   border: 1px solid var(--color-success);
   background: color-mix(in srgb, var(--color-success) 12%, transparent);

@@ -4,6 +4,7 @@ import { api } from "../api.js";
 import { Clarifier } from "../components/Clarifier.js";
 import { CostMeter } from "../components/CostMeter.js";
 import { ResearchCards } from "../components/ResearchCards.js";
+import { ResultsView } from "../components/ResultsView.js";
 import { SelfTestCards } from "../components/SelfTestCards.js";
 import { SkillCards } from "../components/SkillCards.js";
 import { SkillPlan } from "../components/SkillPlan.js";
@@ -80,6 +81,8 @@ export function RunScreen() {
           {job?.generation && <SkillCards generation={job.generation} />}
 
           {job?.selftest && <SelfTestCards selftest={job.selftest} />}
+
+          {id && job?.results && <ResultsView jobId={id} results={job.results} />}
 
           {scopeDone && !job?.research && (
             <div className="stage-done" role="status">

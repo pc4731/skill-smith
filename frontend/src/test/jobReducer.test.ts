@@ -108,6 +108,19 @@ describe("jobReducer", () => {
     expect(s.job?.selftest?.skills[0]?.triggerRate).toBe(1);
   });
 
+  it("sets the packaging results", () => {
+    let s = jobReducer(initialState, { type: "job", job: baseJob() });
+    s = jobReducer(s, {
+      type: "results",
+      status: "done",
+      skills: [{ name: "a", slug: "a", passed: true, descriptionChars: 50, bodyLines: 10, sources: [], installHints: { personal: "~/.claude/skills/a/", project: ".claude/skills/a/" }, packageRelPath: "a.skill" }],
+      packageAllRelPath: "all-skills.zip",
+    });
+    expect(s.job?.results?.status).toBe("done");
+    expect(s.job?.results?.skills[0]?.packageRelPath).toBe("a.skill");
+    expect(s.job?.results?.packageAllRelPath).toBe("all-skills.zip");
+  });
+
   it("records errors and connection status", () => {
     let s = jobReducer(initialState, { type: "error", message: "boom" });
     expect(s.error).toBe("boom");

@@ -4,6 +4,7 @@ import type {
   Job,
   Meter,
   ResearchDomainState,
+  ResultsState,
   ScopeQuestion,
   SelfTestSkill,
   StageKey,
@@ -43,6 +44,7 @@ export type JobAction =
   | { type: "design"; status: DesignState["status"]; skills?: DesignState["skills"] }
   | { type: "skill"; name: string; slug: string; status: GeneratedSkill["status"]; validation?: GeneratedSkill["validation"]; error?: string }
   | { type: "report"; name: string; slug: string; status: SelfTestSkill["status"]; triggerRate?: number; falseTriggerRate?: number; capabilityScore?: number; passed?: boolean; error?: string }
+  | { type: "results"; status: ResultsState["status"]; skills: ResultsState["skills"]; packageAllRelPath?: string }
   | { type: "connection"; status: ConnectionStatus };
 
 const MAX_LINES = 2000;
@@ -85,6 +87,10 @@ export function jobReducer(state: JobViewState, action: JobAction): JobViewState
       return state.job ? { ...state, job: upsertGeneratedSkill(state.job, action) } : state;
     case "report":
       return state.job ? { ...state, job: upsertSelfTestSkill(state.job, action) } : state;
+    case "results":
+      return state.job
+        ? { ...state, job: { ...state.job, results: { status: action.status, skills: action.skills, packageAllRelPath: action.packageAllRelPath } } }
+        : state;
     case "connection":
       return { ...state, connection: action.status };
     default:
