@@ -1,0 +1,60 @@
+{
+  "at": "2026-06-24T15:50:54.466Z",
+  "base": "http://127.0.0.1:4559",
+  "checks": [
+    {
+      "name": "backend boots",
+      "target": "GET /api/health",
+      "result": "PASS",
+      "detail": "model=claude-opus-4-8"
+    },
+    {
+      "name": "Stage 5 packaging completes",
+      "target": "job.results.status",
+      "result": "PASS",
+      "detail": "status=done skills=2"
+    },
+    {
+      "name": "Package stepper step done",
+      "target": "job.stages",
+      "result": "PASS",
+      "detail": "package stage=done"
+    },
+    {
+      "name": ".skill files written per skill",
+      "target": "skills/<slug>.skill",
+      "result": "PASS",
+      "detail": "demo-skill-a:skill demo-skill-b:skill"
+    },
+    {
+      "name": "results.json written",
+      "target": "results.json",
+      "result": "PASS",
+      "detail": "on disk"
+    },
+    {
+      "name": "GET SKILL.md returns skill text",
+      "target": "/skills/:slug/SKILL.md",
+      "result": "PASS",
+      "detail": "status=200"
+    },
+    {
+      "name": "GET package returns a zip",
+      "target": "/skills/:slug/package",
+      "result": "PASS",
+      "detail": "status=200 bytes=632"
+    },
+    {
+      "name": "GET download-all returns a zip",
+      "target": "/download-all",
+      "result": "PASS",
+      "detail": "status=200 bytes=1398"
+    },
+    {
+      "name": "missing package 404s",
+      "target": "/skills/nope/package",
+      "result": "PASS",
+      "detail": "status=404"
+    }
+  ]
+}

@@ -17,4 +17,5 @@ workspace/*
 .verify/workspace-s1/
 .verify/workspace-s3/
 .verify/workspace-s4/
+.verify/workspace-s5/
 .verify/*.log
