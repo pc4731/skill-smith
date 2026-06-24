@@ -57,8 +57,44 @@ export function createRouter(ctx: AppContext): Router {
   });
 
   router.get("/jobs", async (_req, res) => {
-    const jobs = await ctx.jobStore.list();
-    res.json(jobs);
+    res.json(await ctx.jobStore.listSummaries());
+  });
+
+  // Re-run a previous job: clone its description (+ answered scope, to skip Stage 0)
+  // into a NEW job and start it. The source job is never mutated.
+  router.post("/jobs/:id/rerun", async (req, res) => {
+    const source = await ctx.jobStore.get(req.params.id);
+    if (!source) {
+      res.status(404).json({ error: "job not found" });
+      return;
+    }
+    const job = await ctx.jobStore.create({
+      description: source.description,
+      kind: "skill",
+      ceiling: ctx.config.perJobInvocationCeiling,
+    });
+    await emitJob(ctx, job);
+
+    if (source.scope?.answers) {
+      // Carry the answered scope forward so the re-run skips the clarifier.
+      const scope = source.scope;
+      await ctx.jobStore.writeScope(job.id, scope);
+      const started = await ctx.jobStore.update(job.id, (j) => {
+        j.scope = scope;
+        j.answers = source.answers ?? scope.answers;
+        const stage = j.stages.find((s) => s.key === "scope");
+        if (stage) {
+          stage.status = "done";
+          stage.endedAt = new Date().toISOString();
+        }
+        j.status = "active";
+      });
+      await emitJob(ctx, started);
+      void runStage1(ctx, job.id);
+    } else {
+      void runStage0(ctx, job.id);
+    }
+    res.status(202).json({ id: job.id });
   });
 
   router.get("/jobs/:id", async (req, res) => {

@@ -5,7 +5,7 @@ import path from "node:path";
 import { StageKeys } from "../config/config.js";
 import { emptyMeter } from "../meter/costMeter.js";
 import { eventsFile, jobDir, jobFile, planFile, rawFile, reportFile, researchFile, resultsFile, scopeFile } from "./jobPaths.js";
-import type { Job, JobKind, ResearchBrief, ResultsState, Scope, SkillPlanItem, SkillReport, StageState } from "./types.js";
+import type { Job, JobKind, JobSummary, ResearchBrief, ResultsState, Scope, SkillPlanItem, SkillReport, StageState } from "./types.js";
 
 export interface CreateJobInput {
   description: string;
@@ -87,6 +87,22 @@ export class JobStore {
     }
     jobs.sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
     return jobs;
+  }
+
+  /** Compact, newest-first job summaries for the history list. */
+  async listSummaries(): Promise<JobSummary[]> {
+    const jobs = await this.list();
+    return jobs.map((j) => ({
+      id: j.id,
+      kind: j.kind,
+      description: j.description,
+      status: j.status,
+      createdAt: j.createdAt,
+      updatedAt: j.updatedAt,
+      skillCount: j.results?.skills.length ?? j.generation?.skills.length ?? j.design?.skills.length ?? 0,
+      cost: j.meter.totalCostUsd,
+      calls: j.meter.calls,
+    }));
   }
 
   /** Read-modify-write a job atomically (serialized per job id). Throws if missing. */

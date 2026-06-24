@@ -202,4 +202,19 @@ export interface Job {
   selftest?: SelfTestState;
   results?: ResultsState;
   meter: Meter;
+  /** Free-text note, e.g. set when a job is reconciled after a server restart. */
+  note?: string;
+}
+
+/** Compact job view for the history list (no heavy research/skill bodies). */
+export interface JobSummary {
+  id: string;
+  kind: JobKind;
+  description: string;
+  status: JobStatus;
+  createdAt: string;
+  updatedAt: string;
+  skillCount: number;
+  cost: number;
+  calls: number;
 }
