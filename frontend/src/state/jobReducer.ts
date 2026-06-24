@@ -1,4 +1,6 @@
 import type {
+  DesignState,
+  GeneratedSkill,
   Job,
   Meter,
   ResearchDomainState,
@@ -37,6 +39,8 @@ export type JobAction =
   | { type: "error"; message: string }
   | { type: "done"; stageKey: StageKey }
   | { type: "research"; domain: string; status: ResearchDomainState["status"]; summary?: ResearchDomainState["summary"]; error?: string }
+  | { type: "design"; status: DesignState["status"]; skills?: DesignState["skills"] }
+  | { type: "skill"; name: string; slug: string; status: GeneratedSkill["status"]; validation?: GeneratedSkill["validation"]; error?: string }
   | { type: "connection"; status: ConnectionStatus };
 
 const MAX_LINES = 2000;
@@ -65,6 +69,18 @@ export function jobReducer(state: JobViewState, action: JobAction): JobViewState
       return state.job ? { ...state, job: patchStage(state.job, action.stageKey, "done") } : state;
     case "research":
       return state.job ? { ...state, job: upsertResearchDomain(state.job, action) } : state;
+    case "design":
+      return state.job
+        ? {
+            ...state,
+            job: {
+              ...state.job,
+              design: { status: action.status, skills: action.skills ?? state.job.design?.skills ?? [] },
+            },
+          }
+        : state;
+    case "skill":
+      return state.job ? { ...state, job: upsertGeneratedSkill(state.job, action) } : state;
     case "connection":
       return { ...state, connection: action.status };
     default:
@@ -100,4 +116,24 @@ function upsertResearchDomain(
     ...job,
     research: { status: job.research?.status ?? "running", domains },
   };
+}
+
+/** Add or update a generated skill in place (keyed by slug). */
+function upsertGeneratedSkill(
+  job: Job,
+  action: { name: string; slug: string; status: GeneratedSkill["status"]; validation?: GeneratedSkill["validation"]; error?: string },
+): Job {
+  const existing = job.generation?.skills ?? [];
+  const idx = existing.findIndex((s) => s.slug === action.slug);
+  const patch: Partial<GeneratedSkill> = { status: action.status };
+  if (action.validation) patch.validation = action.validation;
+  if (action.error) patch.error = action.error;
+
+  let skills: GeneratedSkill[];
+  if (idx >= 0) {
+    skills = existing.map((s, i) => (i === idx ? { ...s, ...patch } : s));
+  } else {
+    skills = [...existing, { name: action.name, slug: action.slug, status: action.status, ...patch }];
+  }
+  return { ...job, generation: { status: job.generation?.status ?? "running", skills } };
 }

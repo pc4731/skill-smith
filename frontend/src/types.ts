@@ -79,6 +79,42 @@ export interface ResearchState {
   domains: ResearchDomainState[];
 }
 
+// ---- Stage 2: design ----
+export interface SkillPlanItem {
+  name: string;
+  slug: string;
+  description: string;
+  scopeBoundaries: string;
+  sourceDomains: string[];
+}
+export type DesignStatus = "pending" | "running" | "awaiting_approval" | "done" | "failed";
+export interface DesignState {
+  status: DesignStatus;
+  skills: SkillPlanItem[];
+}
+
+// ---- Stage 3: generation ----
+export type SkillGenStatus = "pending" | "running" | "done" | "failed";
+export interface SkillValidation {
+  ok: boolean;
+  descriptionChars: number;
+  bodyLines: number;
+  hasReferences: boolean;
+  issues: string[];
+}
+export interface GeneratedSkill {
+  name: string;
+  slug: string;
+  status: SkillGenStatus;
+  error?: string;
+  validation?: SkillValidation;
+}
+export type GenerationStatus = "pending" | "running" | "done" | "done_with_warnings" | "failed";
+export interface GenerationState {
+  status: GenerationStatus;
+  skills: GeneratedSkill[];
+}
+
 export interface Job {
   id: string;
   kind: "skill" | "sayhi";
@@ -91,5 +127,7 @@ export interface Job {
   questions?: ScopeQuestion[];
   answers?: Record<string, string | string[]>;
   research?: ResearchState;
+  design?: DesignState;
+  generation?: GenerationState;
   meter: Meter;
 }

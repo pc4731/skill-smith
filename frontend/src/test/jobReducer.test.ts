@@ -75,6 +75,29 @@ describe("jobReducer", () => {
     expect(s.job?.research?.domains.map((d) => d.domain)).toEqual(["react", "aem"]);
   });
 
+  it("sets the design plan and upserts generated skills", () => {
+    let s = jobReducer(initialState, { type: "job", job: baseJob() });
+    s = jobReducer(s, {
+      type: "design",
+      status: "awaiting_approval",
+      skills: [{ name: "a", slug: "a", description: "d", scopeBoundaries: "b", sourceDomains: ["x"] }],
+    });
+    expect(s.job?.design?.status).toBe("awaiting_approval");
+    expect(s.job?.design?.skills).toHaveLength(1);
+
+    s = jobReducer(s, { type: "skill", name: "a", slug: "a", status: "running" });
+    expect(s.job?.generation?.skills[0]?.status).toBe("running");
+    s = jobReducer(s, {
+      type: "skill",
+      name: "a",
+      slug: "a",
+      status: "done",
+      validation: { ok: true, descriptionChars: 50, bodyLines: 10, hasReferences: true, issues: [] },
+    });
+    expect(s.job?.generation?.skills).toHaveLength(1); // updated in place
+    expect(s.job?.generation?.skills[0]?.status).toBe("done");
+  });
+
   it("records errors and connection status", () => {
     let s = jobReducer(initialState, { type: "error", message: "boom" });
     expect(s.error).toBe("boom");

@@ -4,6 +4,8 @@ import { api } from "../api.js";
 import { Clarifier } from "../components/Clarifier.js";
 import { CostMeter } from "../components/CostMeter.js";
 import { ResearchCards } from "../components/ResearchCards.js";
+import { SkillCards } from "../components/SkillCards.js";
+import { SkillPlan } from "../components/SkillPlan.js";
 import { Stepper } from "../components/Stepper.js";
 import { StreamingConsole } from "../components/StreamingConsole.js";
 import { useJobStream } from "../hooks/useJobStream.js";
@@ -33,6 +35,22 @@ export function RunScreen() {
     }
   };
 
+  const approvePlan = async () => {
+    if (!id) return;
+    setBusy(true);
+    try {
+      await api.approvePlan(id, { approve: true });
+      const fresh = await api.getJob(id);
+      dispatch({ type: "job", job: fresh });
+    } catch (err) {
+      dispatch({ type: "error", message: err instanceof Error ? err.message : String(err) });
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const designAwaiting = job?.design?.status === "awaiting_approval";
+
   return (
     <main className="run">
       <div className="run-grid">
@@ -53,6 +71,12 @@ export function RunScreen() {
           )}
 
           {job?.research && <ResearchCards research={job.research} />}
+
+          {designAwaiting && job?.design && (
+            <SkillPlan design={job.design} busy={busy} onApprove={approvePlan} />
+          )}
+
+          {job?.generation && <SkillCards generation={job.generation} />}
 
           {scopeDone && !job?.research && (
             <div className="stage-done" role="status">

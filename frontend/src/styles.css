@@ -351,6 +351,50 @@ a {
 .rc-summary dd { margin: 0; font-family: var(--font-mono); font-weight: 600; }
 .rc-error { color: var(--color-danger); font-size: var(--text-sm); margin: var(--space-2) 0 0; }
 
+/* Skill plan (approve gate) */
+.skill-plan-title, .skills-title { font-size: var(--text-lg); margin: var(--space-4) 0 var(--space-2); }
+.skills-warn { color: var(--color-warning); font-size: var(--text-sm); font-weight: 400; }
+.plan-list { list-style: none; padding: 0; margin: 0 0 var(--space-3); }
+.plan-item {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  margin-bottom: var(--space-2);
+  background: var(--color-surface);
+}
+.plan-name { font-weight: 600; }
+.plan-desc { margin: var(--space-1) 0; color: var(--color-text); }
+.plan-meta { display: flex; gap: var(--space-4); flex-wrap: wrap; font-size: var(--text-xs); color: var(--color-text-muted); }
+.plan-actions { margin-top: var(--space-2); }
+
+/* Generated skill cards */
+.skill-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: var(--space-3);
+}
+.skill-card {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  background: var(--color-surface);
+}
+.skill-card.sc-running { border-color: var(--color-accent); }
+.skill-card.sc-done { border-color: var(--color-success); }
+.skill-card.sc-failed { border-color: var(--color-danger); }
+.sc-head { display: flex; align-items: baseline; gap: var(--space-2); }
+.sc-icon { color: var(--color-text-faint); }
+.sc-running .sc-icon { color: var(--color-accent); }
+.sc-done .sc-icon { color: var(--color-success); }
+.sc-failed .sc-icon { color: var(--color-danger); }
+.sc-name { font-weight: 600; flex: 1; word-break: break-word; }
+.sc-status { font-size: var(--text-xs); color: var(--color-text-muted); }
+.sc-validation { display: flex; gap: var(--space-4); margin: var(--space-2) 0 0; }
+.sc-validation div { display: flex; flex-direction: column; }
+.sc-validation dt { font-size: var(--text-xs); color: var(--color-text-muted); }
+.sc-validation dd { margin: 0; font-family: var(--font-mono); font-weight: 600; font-size: var(--text-sm); }
+.sc-error { color: var(--color-danger); font-size: var(--text-sm); margin: var(--space-2) 0 0; }
+
 .stage-done {
   border: 1px solid var(--color-success);
   background: color-mix(in srgb, var(--color-success) 12%, transparent);

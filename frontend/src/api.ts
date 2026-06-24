@@ -37,4 +37,10 @@ export const api = {
   ): Promise<{ ok: boolean; scope: Scope }> {
     return jsonFetch(`/api/jobs/${id}/answers`, { method: "POST", body: JSON.stringify(payload) });
   },
+  approvePlan(
+    id: string,
+    payload: { approve?: boolean; skills?: unknown[] },
+  ): Promise<{ ok: boolean; skills: unknown[] }> {
+    return jsonFetch(`/api/jobs/${id}/plan`, { method: "POST", body: JSON.stringify(payload) });
+  },
 };
