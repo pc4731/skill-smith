@@ -1,0 +1,51 @@
+{
+  "domain": "AEM GraphQL API (persisted queries, endpoints, filtering)",
+  "key_apis": [
+    "Auto-generated query types per Content Fragment Model: `<model>ByPath(_path, variation)` returns a single `item`; `<model>List(filter, sort, offset, limit, _assetTransform)` returns `items`; `<model>Paginated(filter, sort, first, after)` returns `edges { cursor node }` + `pageInfo { endCursor hasNextPage }` (forward-only).",
+    "Persisted query EXECUTE (production, GET, cacheable): `GET /graphql/execute.json/<config>/<persisted-label>` — e.g. `/graphql/execute.json/wknd/plain-article-query`. Variables are appended after the path, separated by semicolons: `...;var=value;var2=value2`.",
+    "Persisted query AUTHORING (author tier): create with `PUT /graphql/persist.json/<config>/<label>`; update with `POST /graphql/persist.json/<config>/<label>`. Stored under `/conf/<config>/settings/graphql/persistentQueries/<label>` (global stored under `/conf/global/...`).",
+    "Ad-hoc POST endpoint (dev/test only): `POST /content/cq:graphql/<config>/endpoint.json`; schema introspection via the same endpoint with `.GQLschema`. POST is blocked on publish by default.",
+    "Filter argument shape: `filter: { <field>: { _expressions: [{ value, _operator }], _logOp: AND|OR } }`; operators include EQUALS/EQUALS_NOT, CONTAINS/CONTAINS_NOT, STARTS_WITH, GREATER(_EQUAL)/LOWER(_EQUAL), AT/NOT_AT/BEFORE/AFTER; modifiers `_ignoreCase`, `_sensitiveness`, `_apply` (e.g. ALL_OR_EMPTY).",
+    "System/virtual fields: `_path`, `_variation` (returns variation name or `master`, with master fallback), `_metadata`, `_model`, `_tags`, `_references`; on image refs `_dynamicUrl` / `_authorUrl` and the `_assetTransform` arg (format GIF/PNG/JPG/WEBP, size, crop, rotation, quality, seoName) for web-optimized renditions.",
+    "@adobe/aem-headless-client-js: `new AEMHeadless({ serviceURL, endpoint, auth })`; `runPersistedQuery(path, [variables], [options], [retryOptions]) => Promise`; also `persistQuery`, `listPersistedQueries`, `runQuery`. `auth` is a Bearer-token string (dev token) or a `[user, pass]` pair."
+  ],
+  "idioms": [
+    "Production rule of thumb: author/test queries in GraphiQL on author, persist them, and let the React app call the GET `execute.json` endpoint — persisted GETs are cacheable at Dispatcher + CDN; ad-hoc POST is not and is disabled on publish.",
+    "In the React SPA, instantiate one AEMHeadless client and wrap each query in a `fetchPersistedQuery` helper that calls `runPersistedQuery('<config>/<label>', variables)`; pass variables as a plain object — the SDK handles the `;name=value` URL encoding for you.",
+    "Parameterize persisted queries with GraphQL variables (e.g. `query($path: String!) { adventureByPath(_path: $path) { item {...} } }`) so the same persisted query is reused with different inputs instead of building strings client-side.",
+    "Configure dev auth via env (e.g. `REACT_APP_DEV_TOKEN` / `.env.development`) and pass it as the `auth` Bearer string; the Cloud Console-issued local development token is the standard way to reach a remote AEMaaCS instance from a standalone app.",
+    "Scope every list/filter query with `_path` first so the JCR pre-filter shrinks the result set before in-memory filtering runs.",
+    "Use a global endpoint/config for models shared across sites; use a site-specific config (e.g. `wknd`) when models and queries belong to one Sites configuration — the persisted query's config must match the model's config.",
+    "Request only the rich-text formats you need (plaintext vs html vs markdown vs json) to keep payloads small; prefer cursor-based `...Paginated` for deep paging."
+  ],
+  "gotchas": [
+    "Filtering/sorting on NESTED fragment fields or on multiline (HTML/Markdown/JSON) fields, virtual `_`-fields (except `_path`), CONTAINS_NOT, `_ignoreCase`, null checks, and non-zero `_sensitiveness` all happen IN MEMORY after loading the entire model's result set — slow on large datasets. Only top-level scalar fields and `_path` are filtered efficiently at the JCR level.",
+    "POST GraphQL is blocked by default on AEMaaCS publish; you must set the Cloud Manager env var `ENABLE_GRAPHQL_ENDPOINT=true` to allow it — but the recommended path is persisted GET queries, not enabling POST.",
+    "`execute.json` returns HTTP 200 even when the query errors, by default. Set the OSGi 'Persisted Query Service Configuration' flag `responseContentTypeGraphQLResponseJson=true` to get real 400/404/500 status codes — otherwise client error handling silently misses failures.",
+    "Variables in the GET URL are semicolon-separated and must be UTF-8 encoded when sent raw: `;`=`%3B`, `=`=`%3D`, `/`=`%2F` (paths in variable values are full of slashes). Forgetting to encode breaks the request.",
+    "A persisted query is bound to its config: a query saved under `/conf/wknd/...` is distinct from one under `/conf/global/...` even with identical text, and must be executed against the matching `<config>` segment.",
+    "`_variation` field cannot be combined with the `includeVariations` filter in the same query; a missing variation silently falls back to `master`.",
+    "Pagination is forward-only (`first`/`after`); no backward cursor. `offset`/`limit` on `...List` degrades on high offsets because it still loads the full result set into memory — switch to `...Paginated` for later pages.",
+    "Keep Content Fragment nesting under ~5–6 levels; deep nesting forces full-hierarchy traversal and large memory loads.",
+    "Browser CORS: a standalone external React app hitting AEMaaCS needs CORS configured server-side (CORS OSGi policy / Dispatcher) and a token with appropriate scope; the dev token is for development/non-production, not a long-lived production secret."
+  ],
+  "version_notes": "Facts are current for AEM as a Cloud Service (continuously released; docs verified June 2026). Cursor pagination (`...Paginated`, `first`/`after`, `edges`/`pageInfo`) and the hybrid JCR-then-in-memory filtering model are AEMaaCS/6.5.x-era features. Default persisted-query cache headers on publish: max-age 60s, CDN s-maxage 7200s, stale-while-revalidate 86400s, stale-if-error 86400s — overridable at persist time via cache-control/surrogate-control. Paginated default `first` is 50 (max 100). The same GraphQL API exists in AEM 6.5 (on-prem) but endpoint enablement, dev tokens, and CDN behavior differ from Cloud Service; this research targets AEMaaCS. @adobe/aem-headless-client-js referenced around v2.1.x.",
+  "sources": [
+    {
+      "title": "AEM GraphQL API for use with Content Fragments — AEM as a Cloud Service",
+      "url": "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/headless/graphql-api/content-fragments"
+    },
+    {
+      "title": "Persisted GraphQL queries — AEM as a Cloud Service",
+      "url": "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/headless/graphql-api/persisted-queries"
+    },
+    {
+      "title": "Optimizing GraphQL queries — AEM as a Cloud Service",
+      "url": "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/headless/graphql-api/graphql-optimization"
+    },
+    {
+      "title": "adobe/aem-headless-client-js — API reference (AEMHeadless, runPersistedQuery, auth)",
+      "url": "https://github.com/adobe/aem-headless-client-js/blob/main/api-reference.md"
+    }
+  ]
+}

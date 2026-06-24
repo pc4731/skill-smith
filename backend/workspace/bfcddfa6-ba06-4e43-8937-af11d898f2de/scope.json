@@ -1,0 +1,92 @@
+{
+  "targetStack": "Adobe Experience Manager (AEM) headless CMS with a React SPA consuming Content Fragments via GraphQL/Content Services",
+  "domains": [
+    "AEM Content Fragment Models & authoring (headless content modeling)",
+    "AEM GraphQL API (persisted queries, endpoints, filtering)",
+    "AEM Content Services / Assets HTTP API delivery",
+    "React SPA architecture (hooks, routing, data fetching)",
+    "@adobe/aem-headless-client-js / aem-react-editable-components SDK",
+    "AEM SPA Editor + Editable Components (Universal Editor / in-context editing)",
+    "AEM project structure & Maven archetype (ui.apps, ui.frontend, core bundles)",
+    "Authentication & delivery (dev tokens, AEM as a Cloud Service, Edge Delivery)",
+    "CORS, dispatcher config & caching for headless delivery",
+    "Deployment (Cloud Manager / AEMaaCS pipelines)"
+  ],
+  "likelyTasks": [
+    "Define a Content Fragment Model and expose it via a GraphQL endpoint",
+    "Write and persist a GraphQL query, then fetch it from React with the AEM headless client",
+    "Build React components that render Content Fragment data",
+    "Wire up the ui.frontend module and integrate the React build into AEM",
+    "Configure CORS and the dispatcher for cross-origin headless requests",
+    "Implement in-context editing with the SPA Editor / Universal Editor",
+    "Set up authentication tokens for fetching content in different environments",
+    "Configure Cloud Manager pipeline / local SDK quickstart for development"
+  ],
+  "questions": [
+    {
+      "id": "deployment",
+      "question": "Which AEM deployment target?",
+      "type": "single",
+      "options": [
+        "AEM as a Cloud Service (AEMaaCS)",
+        "AEM 6.5 on-premise/AMS",
+        "Local SDK quickstart only",
+        "Not sure"
+      ]
+    },
+    {
+      "id": "editing",
+      "question": "Do you need in-context/visual editing or pure headless delivery?",
+      "type": "single",
+      "options": [
+        "Pure headless (GraphQL/Content Services only)",
+        "SPA Editor (editable React components)",
+        "Universal Editor (AEMaaCS)",
+        "Both headless + visual editing"
+      ]
+    },
+    {
+      "id": "delivery",
+      "question": "Primary content delivery API?",
+      "type": "multi",
+      "options": [
+        "GraphQL Content Fragments",
+        "Content Services (model.json)",
+        "Assets HTTP API",
+        "Edge Delivery Services"
+      ]
+    },
+    {
+      "id": "react_setup",
+      "question": "How is the React app hosted relative to AEM?",
+      "type": "single",
+      "options": [
+        "ui.frontend module inside AEM project",
+        "Standalone external React app",
+        "Next.js/SSR frontend",
+        "Not decided"
+      ]
+    },
+    {
+      "id": "auth",
+      "question": "How will React authenticate to AEM for content?",
+      "type": "single",
+      "options": [
+        "Public/anonymous (published content)",
+        "Dev/service token",
+        "IMS / OAuth (AEMaaCS)",
+        "Unsure"
+      ]
+    }
+  ],
+  "answers": {
+    "deployment": "AEM as a Cloud Service (AEMaaCS)",
+    "editing": "Pure headless (GraphQL/Content Services only)",
+    "delivery": [
+      "GraphQL Content Fragments"
+    ],
+    "react_setup": "Standalone external React app",
+    "auth": "Dev/service token"
+  },
+  "usedDefaults": false
+}

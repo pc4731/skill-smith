@@ -1,0 +1,44 @@
+{
+  "id": "4f367c60-5e84-4a4b-a398-bcd1a851566b",
+  "kind": "sayhi",
+  "status": "done",
+  "description": "Round-trip proof: claude -p \"say hi\"",
+  "createdAt": "2026-06-24T17:04:22.511Z",
+  "updatedAt": "2026-06-24T17:04:26.108Z",
+  "stages": [
+    {
+      "key": "scope",
+      "status": "done",
+      "startedAt": "2026-06-24T17:04:22.515Z",
+      "endedAt": "2026-06-24T17:04:26.108Z"
+    },
+    {
+      "key": "research",
+      "status": "pending"
+    },
+    {
+      "key": "design",
+      "status": "pending"
+    },
+    {
+      "key": "generate",
+      "status": "pending"
+    },
+    {
+      "key": "test",
+      "status": "pending"
+    },
+    {
+      "key": "package",
+      "status": "pending"
+    }
+  ],
+  "meter": {
+    "calls": 1,
+    "inputTokens": 5597,
+    "outputTokens": 17,
+    "totalCostUsd": 0.060376,
+    "ceiling": 150,
+    "ceilingHit": false
+  }
+}

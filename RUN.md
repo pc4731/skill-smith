@@ -35,10 +35,12 @@ A single command starts the backend and the frontend together:
 npm run dev
 ```
 
-- **Backend** → `http://127.0.0.1:4000` (API + SSE). Binds to localhost by default.
-- **Frontend** → `http://localhost:5173` (Vite dev server; proxies `/api` to the backend).
+- **Backend** → `http://127.0.0.1:4000` (API + SSE only — it serves `/api/*`, **not** a UI; opening
+  this root returns `Cannot GET /`). Binds to localhost by default.
+- **Frontend** → `http://localhost:5174` (Vite dev server; proxies `/api` to the backend).
 
-Open **http://localhost:5173**.
+Open the **frontend** URL — **http://localhost:5174** (this is the app; do **not** open the backend
+port 4000). `npm run dev` also prints it on the magenta `frontend` line.
 
 To run just one side:
 

@@ -1,0 +1,279 @@
+{
+  "id": "bfcddfa6-ba06-4e43-8937-af11d898f2de",
+  "kind": "skill",
+  "status": "active",
+  "description": "AEM project with headless react",
+  "createdAt": "2026-06-24T17:05:14.734Z",
+  "updatedAt": "2026-06-24T17:13:49.136Z",
+  "stages": [
+    {
+      "key": "scope",
+      "status": "done",
+      "startedAt": "2026-06-24T17:05:14.741Z",
+      "endedAt": "2026-06-24T17:06:57.837Z"
+    },
+    {
+      "key": "research",
+      "status": "running",
+      "startedAt": "2026-06-24T17:06:57.847Z"
+    },
+    {
+      "key": "design",
+      "status": "pending"
+    },
+    {
+      "key": "generate",
+      "status": "pending"
+    },
+    {
+      "key": "test",
+      "status": "pending"
+    },
+    {
+      "key": "package",
+      "status": "pending"
+    }
+  ],
+  "meter": {
+    "calls": 4,
+    "inputTokens": 27178,
+    "outputTokens": 19042,
+    "totalCostUsd": 2.550248,
+    "ceiling": 150,
+    "ceilingHit": false
+  },
+  "scope": {
+    "targetStack": "Adobe Experience Manager (AEM) headless CMS with a React SPA consuming Content Fragments via GraphQL/Content Services",
+    "domains": [
+      "AEM Content Fragment Models & authoring (headless content modeling)",
+      "AEM GraphQL API (persisted queries, endpoints, filtering)",
+      "AEM Content Services / Assets HTTP API delivery",
+      "React SPA architecture (hooks, routing, data fetching)",
+      "@adobe/aem-headless-client-js / aem-react-editable-components SDK",
+      "AEM SPA Editor + Editable Components (Universal Editor / in-context editing)",
+      "AEM project structure & Maven archetype (ui.apps, ui.frontend, core bundles)",
+      "Authentication & delivery (dev tokens, AEM as a Cloud Service, Edge Delivery)",
+      "CORS, dispatcher config & caching for headless delivery",
+      "Deployment (Cloud Manager / AEMaaCS pipelines)"
+    ],
+    "likelyTasks": [
+      "Define a Content Fragment Model and expose it via a GraphQL endpoint",
+      "Write and persist a GraphQL query, then fetch it from React with the AEM headless client",
+      "Build React components that render Content Fragment data",
+      "Wire up the ui.frontend module and integrate the React build into AEM",
+      "Configure CORS and the dispatcher for cross-origin headless requests",
+      "Implement in-context editing with the SPA Editor / Universal Editor",
+      "Set up authentication tokens for fetching content in different environments",
+      "Configure Cloud Manager pipeline / local SDK quickstart for development"
+    ],
+    "questions": [
+      {
+        "id": "deployment",
+        "question": "Which AEM deployment target?",
+        "type": "single",
+        "options": [
+          "AEM as a Cloud Service (AEMaaCS)",
+          "AEM 6.5 on-premise/AMS",
+          "Local SDK quickstart only",
+          "Not sure"
+        ]
+      },
+      {
+        "id": "editing",
+        "question": "Do you need in-context/visual editing or pure headless delivery?",
+        "type": "single",
+        "options": [
+          "Pure headless (GraphQL/Content Services only)",
+          "SPA Editor (editable React components)",
+          "Universal Editor (AEMaaCS)",
+          "Both headless + visual editing"
+        ]
+      },
+      {
+        "id": "delivery",
+        "question": "Primary content delivery API?",
+        "type": "multi",
+        "options": [
+          "GraphQL Content Fragments",
+          "Content Services (model.json)",
+          "Assets HTTP API",
+          "Edge Delivery Services"
+        ]
+      },
+      {
+        "id": "react_setup",
+        "question": "How is the React app hosted relative to AEM?",
+        "type": "single",
+        "options": [
+          "ui.frontend module inside AEM project",
+          "Standalone external React app",
+          "Next.js/SSR frontend",
+          "Not decided"
+        ]
+      },
+      {
+        "id": "auth",
+        "question": "How will React authenticate to AEM for content?",
+        "type": "single",
+        "options": [
+          "Public/anonymous (published content)",
+          "Dev/service token",
+          "IMS / OAuth (AEMaaCS)",
+          "Unsure"
+        ]
+      }
+    ],
+    "answers": {
+      "deployment": "AEM as a Cloud Service (AEMaaCS)",
+      "editing": "Pure headless (GraphQL/Content Services only)",
+      "delivery": [
+        "GraphQL Content Fragments"
+      ],
+      "react_setup": "Standalone external React app",
+      "auth": "Dev/service token"
+    },
+    "usedDefaults": false
+  },
+  "questions": [
+    {
+      "id": "deployment",
+      "question": "Which AEM deployment target?",
+      "type": "single",
+      "options": [
+        "AEM as a Cloud Service (AEMaaCS)",
+        "AEM 6.5 on-premise/AMS",
+        "Local SDK quickstart only",
+        "Not sure"
+      ]
+    },
+    {
+      "id": "editing",
+      "question": "Do you need in-context/visual editing or pure headless delivery?",
+      "type": "single",
+      "options": [
+        "Pure headless (GraphQL/Content Services only)",
+        "SPA Editor (editable React components)",
+        "Universal Editor (AEMaaCS)",
+        "Both headless + visual editing"
+      ]
+    },
+    {
+      "id": "delivery",
+      "question": "Primary content delivery API?",
+      "type": "multi",
+      "options": [
+        "GraphQL Content Fragments",
+        "Content Services (model.json)",
+        "Assets HTTP API",
+        "Edge Delivery Services"
+      ]
+    },
+    {
+      "id": "react_setup",
+      "question": "How is the React app hosted relative to AEM?",
+      "type": "single",
+      "options": [
+        "ui.frontend module inside AEM project",
+        "Standalone external React app",
+        "Next.js/SSR frontend",
+        "Not decided"
+      ]
+    },
+    {
+      "id": "auth",
+      "question": "How will React authenticate to AEM for content?",
+      "type": "single",
+      "options": [
+        "Public/anonymous (published content)",
+        "Dev/service token",
+        "IMS / OAuth (AEMaaCS)",
+        "Unsure"
+      ]
+    }
+  ],
+  "answers": {
+    "deployment": "AEM as a Cloud Service (AEMaaCS)",
+    "editing": "Pure headless (GraphQL/Content Services only)",
+    "delivery": [
+      "GraphQL Content Fragments"
+    ],
+    "react_setup": "Standalone external React app",
+    "auth": "Dev/service token"
+  },
+  "research": {
+    "status": "running",
+    "domains": [
+      {
+        "domain": "AEM Content Fragment Models & authoring (headless content modeling)",
+        "slug": "aem-content-fragment-models-authoring-headless-content-modeling",
+        "status": "done",
+        "summary": {
+          "keyApis": 8,
+          "gotchas": 9,
+          "sources": 5
+        }
+      },
+      {
+        "domain": "AEM GraphQL API (persisted queries, endpoints, filtering)",
+        "slug": "aem-graphql-api-persisted-queries-endpoints-filtering",
+        "status": "done",
+        "summary": {
+          "keyApis": 7,
+          "gotchas": 9,
+          "sources": 4
+        }
+      },
+      {
+        "domain": "AEM Content Services / Assets HTTP API delivery",
+        "slug": "aem-content-services-assets-http-api-delivery",
+        "status": "done",
+        "summary": {
+          "keyApis": 9,
+          "gotchas": 8,
+          "sources": 5
+        }
+      },
+      {
+        "domain": "React SPA architecture (hooks, routing, data fetching)",
+        "slug": "react-spa-architecture-hooks-routing-data-fetching",
+        "status": "running"
+      },
+      {
+        "domain": "@adobe/aem-headless-client-js / aem-react-editable-components SDK",
+        "slug": "adobe-aem-headless-client-js-aem-react-editable-components-sdk",
+        "status": "failed",
+        "error": "claude exited 1: "
+      },
+      {
+        "domain": "AEM SPA Editor + Editable Components (Universal Editor / in-context editing)",
+        "slug": "aem-spa-editor-editable-components-universal-editor-in-context-e",
+        "status": "failed",
+        "error": "claude exited 1: "
+      },
+      {
+        "domain": "AEM project structure & Maven archetype (ui.apps, ui.frontend, core bundles)",
+        "slug": "aem-project-structure-maven-archetype-ui-apps-ui-frontend-core-b",
+        "status": "failed",
+        "error": "claude exited 1: "
+      },
+      {
+        "domain": "Authentication & delivery (dev tokens, AEM as a Cloud Service, Edge Delivery)",
+        "slug": "authentication-delivery-dev-tokens-aem-as-a-cloud-service-edge-d",
+        "status": "failed",
+        "error": "claude exited 1: "
+      },
+      {
+        "domain": "CORS, dispatcher config & caching for headless delivery",
+        "slug": "cors-dispatcher-config-caching-for-headless-delivery",
+        "status": "failed",
+        "error": "claude exited 1: "
+      },
+      {
+        "domain": "Deployment (Cloud Manager / AEMaaCS pipelines)",
+        "slug": "deployment-cloud-manager-aemaacs-pipelines",
+        "status": "failed",
+        "error": "claude exited 1: "
+      }
+    ]
+  }
+}

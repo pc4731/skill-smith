@@ -6,7 +6,7 @@ const BACKEND_PORT = process.env.SKILL_SMITH_PORT ?? "4000";
 export default defineConfig({
   plugins: [react()],
   server: {
-    port: 5173,
+    port: 5174,
     proxy: {
       "/api": {
         target: `http://localhost:${BACKEND_PORT}`,

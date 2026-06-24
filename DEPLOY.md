@@ -12,8 +12,8 @@ Skill Smith has two pieces:
 
 ## Local (no containers) — the primary supported flow
 
-See [RUN.md](RUN.md). In short: `npm install` then `npm run dev` (backend on `:4000`, frontend on
-`:5173` with a dev proxy to the backend).
+See [RUN.md](RUN.md). In short: `npm install` then `npm run dev` (backend API on `:4000`, frontend UI on
+`:5174` with a dev proxy to the backend) — open the frontend (`:5174`), not the backend.
 
 ## Docker Compose
 

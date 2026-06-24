@@ -1,0 +1,57 @@
+{
+  "domain": "AEM Content Fragment Models & authoring (headless content modeling)",
+  "key_apis": [
+    "GraphQL endpoint (ad-hoc POST): /content/cq:graphql/<config>/endpoint.json where <config> is 'global' or a per-config-folder name; schema introspectable at /content/cq:graphql/<config>/endpoint.GQLschema",
+    "Persisted query execution (GET, cacheable): /graphql/execute.json/<config>/<queryName> (e.g. /graphql/execute.json/wknd/adventures-all)",
+    "Persisted query authoring (PUT): /graphql/persist.json/<config>/<queryName>",
+    "Query entry points auto-generated per model: <model>ByPath(_path: \"...\") for a single fragment; <model>List for a filtered/sorted collection; <model>Paginated(first:, after:) for cursor (GraphQL Cursor Connections spec) pagination",
+    "@adobe/aem-headless-client-js (AEM Headless Client for JavaScript): aemHeadlessClient.runPersistedQuery(persistedQueryName, queryParameters) and runQuery(rawQuery); data at response?.data",
+    "System helper fields (underscore-prefixed): _path, _id, _metadata (TypedMetaData: stringMetadata/intMetadata/...), _variation, _variations, _references, _model, _tags, _locale; image fields _dynamicUrl, _dmS7Url, _authorUrl, _publishUrl",
+    "Multiline/rich-text field sub-selections: plaintext, html, markdown, json",
+    "Auth header: Authorization: Bearer <access_token> for both dev token and service-credentials access token"
+  ],
+  "idioms": [
+    "Model the data as Content Fragment Models in AEM; each model auto-generates a GraphQL type plus <model>ByPath / <model>List / <model>Paginated entry points — you do not hand-write the schema",
+    "In production, use persisted queries (authored once, executed via GET) so the Dispatcher/CDN can cache the JSON; do not ship ad-hoc POST queries to the SPA",
+    "Pass runtime values via query variables to persisted queries rather than string-concatenating queries client-side (e.g. runPersistedQuery('wknd/adventure-by-slug', { slug }))",
+    "Filter with the filter argument: filter: { field: { _expressions: [{ value, _operator }], _logOp: AND|OR } }; operators include EQUALS, EQUALS_NOT, CONTAINS, STARTS_WITH, GREATER, LOWER, BEFORE, AFTER",
+    "Scope list queries by path using the _path filter with _operator STARTS_WITH/EQUALS to limit to a content tree",
+    "Sort with sort: \"field DESC, other ASC\" using dot notation for nested fields; paginate lists with offset/limit, or use <model>Paginated with first/after + pageInfo.endCursor/hasNextPage",
+    "Resolve Fragment References inline (nested types) and use ... on ModelName inline fragments for multi-type/union references; request _references to fetch RTE inline references",
+    "Use the AEM Headless JS client driven by env vars (REACT_APP_HOST_URI, REACT_APP_AUTH_METHOD, REACT_APP_DEV_TOKEN / REACT_APP_SERVICE_TOKEN) instead of raw fetch to centralize auth and base URL"
+  ],
+  "gotchas": [
+    "CORS is the #1 blocker for an external SPA: you must deploy an OSGi factory config com.adobe.granite.cors.impl.CORSPolicyImpl~<appname>.cfg.json (alloworigin/alloworiginregexp = SPA origin, alsoAllowedPaths covering /content/cq:graphql/... and /graphql/execute.json, supportscredentials, supportedmethods incl. GET/POST/OPTIONS) via Cloud Manager — it cannot be set from a running instance",
+    "Ad-hoc POST queries to the endpoint must be explicitly enabled with the Cloud Manager environment variable ENABLE_GRAPHQL_ENDPOINT=true; otherwise only persisted queries (GET) work",
+    "Dispatcher does not cache persisted queries by default and Dispatcher/Referrer Filter must be configured to allow the methods; a cross-origin POST passes through ~5 validation layers (CDN, Dispatcher, CORS, Referrer Filter, auth) and failures usually hide in Dispatcher or Referrer config",
+    "The Referrer Filter (org.apache.sling.security.impl.ReferrerFilter.cfg.json) is NOT a factory config; allow.hosts and filter.methods (POST/PUT/DELETE/OPTIONS) must be set or write/POST requests are rejected",
+    "Queries execute with the permissions of the token's user account — the technical/service account must have read access to the Assets tree AND the GraphQL endpoint, or results silently come back empty",
+    "A GraphQL endpoint must be created in AEM and (for Preview/Publish) published before remote queries work; 'global' uses all models, a config-folder endpoint scopes to that folder's models",
+    "Updating a Content Fragment Model regenerates the GraphQL schema, which can break existing queries/persisted queries if fields are renamed or removed (no schema versioning)",
+    "includeVariations: true cannot be combined with selecting the _variation field; deep nested filtering/sorting via dot notation has performance costs",
+    "Documented hard limits: max query size 1,048,576 chars, max 15,000 tokens, max 200,000 whitespace tokens"
+  ],
+  "version_notes": "Applies to AEM as a Cloud Service (continuous-release; no pinned version number — features ship continuously, validate against current Experience League docs). GraphQL for AEM Content Fragments also exists on AEM 6.5 (introduced ~6.5.10, with feature gaps) and the local AEM SDK, but Cloud Service is the reference target. Cursor-based <model>Paginated queries and the newer Sites Content Fragment editor (replacing the legacy Assets CF editor) are the current-generation features. For dev/service-token auth against an external app: a Developer Console \"dev token\" is short-lived and suited to local development, while service credentials (a downloaded JSON technical-account credential exchanged via Adobe IMS for a Bearer access token) are the durable server-to-server path; both are sent as Authorization: Bearer. ENABLE_GRAPHQL_ENDPOINT=true is required to allow direct POST queries on top of the always-available persisted-query GET path.",
+  "sources": [
+    {
+      "title": "AEM GraphQL API for use with Content Fragments — AEM as a Cloud Service (Adobe Experience League)",
+      "url": "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/headless/graphql-api/content-fragments"
+    },
+    {
+      "title": "Authentication for Remote AEM GraphQL Queries on Content Fragments (Adobe Experience League)",
+      "url": "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/headless/security/authentication"
+    },
+    {
+      "title": "Best Practices for the setup and use of AEM GraphQL with Content Fragments (Adobe Experience League)",
+      "url": "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/headless/best-practices-setup-use"
+    },
+    {
+      "title": "Cross-Origin Resource Sharing (CORS) configuration with AEM Headless (Adobe Experience League)",
+      "url": "https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/headless/deployment/cross-origin-resource-sharing"
+    },
+    {
+      "title": "React App - AEM Headless Example (Adobe Experience League)",
+      "url": "https://experienceleague.adobe.com/en/docs/experience-manager-learn/getting-started-with-aem-headless/how-to/example-apps/react-app"
+    }
+  ]
+}
