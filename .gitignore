@@ -21,4 +21,8 @@ workspace/*
 .verify/workspace-s4/
 .verify/workspace-s5/
 .verify/workspace-fix/
+.verify/workspace-s6/
+.verify/workspace-s6r/
 .verify/*.log
+.verify/*.pid
+.verify/s6r-id.txt

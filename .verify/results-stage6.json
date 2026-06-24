@@ -1,0 +1,42 @@
+{
+  "at": "2026-06-24T16:11:14.152Z",
+  "base": "http://127.0.0.1:4561",
+  "checks": [
+    {
+      "name": "backend boots",
+      "target": "GET /api/health",
+      "result": "PASS",
+      "detail": "model=claude-opus-4-8"
+    },
+    {
+      "name": "job runs to completion",
+      "target": "job.status",
+      "result": "PASS",
+      "detail": "status=done meterCalls=22"
+    },
+    {
+      "name": "meter updated",
+      "target": "job.meter",
+      "result": "PASS",
+      "detail": "calls=22 cost=0.0558"
+    },
+    {
+      "name": "GET /api/jobs lists the job (summary)",
+      "target": "GET /api/jobs",
+      "result": "PASS",
+      "detail": "status=done skills=2"
+    },
+    {
+      "name": "rerun starts a new distinct job",
+      "target": "POST /rerun",
+      "result": "PASS",
+      "detail": "status=202 newId=true"
+    },
+    {
+      "name": "rerun preserves the description",
+      "target": "clone.description",
+      "result": "PASS",
+      "detail": "Spring Boot REST + SOAP + SQL"
+    }
+  ]
+}
