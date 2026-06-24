@@ -11,6 +11,57 @@ import { validateSkill } from "./stage3Generate.js";
 /** Files inside a skill dir that must NOT ship in the .skill (internals / scratch). */
 const PACKAGE_IGNORE = ["report.json", ".cap/**"];
 
+/** Hardcoded-secret patterns to reject before shipping a skill to a user. */
+const SECRET_PATTERNS: RegExp[] = [
+  /AKIA[0-9A-Z]{16}/, // AWS access key id
+  /\bsk-[A-Za-z0-9]{20,}\b/, // OpenAI-style key
+  /-----BEGIN (?:RSA |EC |OPENSSH |DSA )?PRIVATE KEY-----/,
+  /(?:api[_-]?key|secret|token|password)\s*[:=]\s*["'][A-Za-z0-9_\-]{16,}["']/i,
+];
+
+/** Obvious malware / runtime-exfiltration patterns (esp. in generated scripts/). */
+const MALWARE_PATTERNS: RegExp[] = [
+  /\b(?:curl|wget)\b[^\n|]*\|\s*(?:sh|bash)\b/i, // curl ... | sh
+  /\bbase64\b[^\n|]*(?:-d|--decode)[^\n|]*\|\s*(?:sh|bash)\b/i, // base64 -d | sh
+  /eval\s*\(\s*atob\s*\(/i, // eval(atob(
+];
+
+/**
+ * Safety scan a skill directory before packaging: a generated skill is shipped to and
+ * potentially run by a user, so reject any file containing a hardcoded secret or an obvious
+ * shell-exfiltration/obfuscation pattern. Internals (.cap, report.json) are skipped.
+ */
+export function scanSkill(dir: string): { ok: boolean; issues: string[] } {
+  const issues: string[] = [];
+  let entries: string[] = [];
+  try {
+    entries = fs.readdirSync(dir, { recursive: true }) as string[];
+  } catch {
+    return { ok: true, issues: [] };
+  }
+  for (const rel of entries) {
+    const r = String(rel);
+    if (r.startsWith(".cap") || r === "report.json" || r.endsWith(".skill")) continue;
+    const full = path.join(dir, r);
+    let stat: fs.Stats;
+    try {
+      stat = fs.statSync(full);
+    } catch {
+      continue;
+    }
+    if (!stat.isFile() || stat.size > 1_000_000) continue;
+    let text: string;
+    try {
+      text = fs.readFileSync(full, "utf8");
+    } catch {
+      continue;
+    }
+    if (SECRET_PATTERNS.some((p) => p.test(text))) issues.push(`${r}: possible hardcoded secret`);
+    if (MALWARE_PATTERNS.some((p) => p.test(text))) issues.push(`${r}: suspicious shell/exec pattern`);
+  }
+  return { ok: issues.length === 0, issues: [...new Set(issues)] };
+}
+
 /** Zip a skill directory into a .skill archive (excluding internals). Resolves on close. */
 function zipSkill(srcDir: string, outPath: string): Promise<void> {
   return new Promise((resolve, reject) => {
@@ -82,6 +133,20 @@ export async function runStage5(ctx: AppContext, jobId: string): Promise<void> {
         triggerRate: selftest?.triggerRate, capabilityScore: selftest?.capabilityScore,
         descriptionChars: validation.descriptionChars, bodyLines: validation.bodyLines,
         sources, installHints, error: validation.issues.join("; "),
+      };
+      results.push(item);
+      await emit(ctx, jobId, "package", { name: g.name, slug: g.slug, status: "failed", error: item.error });
+      continue;
+    }
+
+    // Safety gate: never ship a skill whose files contain secrets or shell-exfiltration patterns.
+    const scan = scanSkill(dir);
+    if (!scan.ok) {
+      const item: ResultSkill = {
+        name: g.name, slug: g.slug, passed: false,
+        triggerRate: selftest?.triggerRate, capabilityScore: selftest?.capabilityScore,
+        descriptionChars: validation.descriptionChars, bodyLines: validation.bodyLines,
+        sources, installHints, error: `safety scan flagged: ${scan.issues.join("; ")}`,
       };
       results.push(item);
       await emit(ctx, jobId, "package", { name: g.name, slug: g.slug, status: "failed", error: item.error });
