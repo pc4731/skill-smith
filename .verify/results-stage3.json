@@ -1,0 +1,60 @@
+{
+  "at": "2026-06-24T04:13:36.837Z",
+  "base": "http://127.0.0.1:4557",
+  "checks": [
+    {
+      "name": "backend boots",
+      "target": "GET /api/health",
+      "result": "PASS",
+      "detail": "model=claude-opus-4-8"
+    },
+    {
+      "name": "Stage 2 design parks awaiting approval",
+      "target": "job.design.status",
+      "result": "PASS",
+      "detail": "skills=2"
+    },
+    {
+      "name": "approve plan endpoint",
+      "target": "POST /api/jobs/:id/plan",
+      "result": "PASS",
+      "detail": "status=202"
+    },
+    {
+      "name": "Stage 3 generation completes",
+      "target": "job.generation.status",
+      "result": "PASS",
+      "detail": "status=done skills=2"
+    },
+    {
+      "name": "Generate stepper step done",
+      "target": "job.stages",
+      "result": "PASS",
+      "detail": "generate stage=done"
+    },
+    {
+      "name": "Design stepper step done",
+      "target": "job.stages",
+      "result": "PASS",
+      "detail": "design stage=done"
+    },
+    {
+      "name": "each done skill has a valid SKILL.md",
+      "target": "skills/<slug>/SKILL.md",
+      "result": "PASS",
+      "detail": "demo-skill-a:done/valid demo-skill-b:done/valid"
+    },
+    {
+      "name": "plan.json persisted",
+      "target": "workspace/<job>/plan.json",
+      "result": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "re-approve guarded",
+      "target": "POST /api/jobs/:id/plan (again)",
+      "result": "PASS",
+      "detail": "status=409"
+    }
+  ]
+}

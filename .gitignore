@@ -15,4 +15,5 @@ workspace/*
 # Runtime-verification transient data (keep probe*.mjs + results*.json as evidence)
 .verify/workspace/
 .verify/workspace-s1/
+.verify/workspace-s3/
 .verify/*.log
