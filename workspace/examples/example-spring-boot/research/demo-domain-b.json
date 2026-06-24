@@ -1,0 +1,24 @@
+{
+  "domain": "demo-domain-b",
+  "key_apis": [
+    "DemoApi.create()",
+    "DemoApi.render()"
+  ],
+  "idioms": [
+    "prefer composition over inheritance"
+  ],
+  "gotchas": [
+    "watch out for version 2 breaking changes"
+  ],
+  "version_notes": "v2.3 is current; v1 APIs removed in v2",
+  "sources": [
+    {
+      "title": "Official docs",
+      "url": "https://example.com/docs"
+    },
+    {
+      "title": "Release notes",
+      "url": "https://example.com/releases"
+    }
+  ]
+}

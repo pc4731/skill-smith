@@ -1,0 +1,22 @@
+{
+  "skills": [
+    {
+      "name": "demo-skill-a",
+      "slug": "demo-skill-a",
+      "description": "Use this skill whenever working with demo-domain-a — covers its APIs, idioms, and gotchas. Trigger on mentions of demo-domain-a, its components, or related tasks.",
+      "scopeBoundaries": "Covers demo-domain-a only; not demo-domain-b.",
+      "sourceDomains": [
+        "demo-domain-a"
+      ]
+    },
+    {
+      "name": "demo-skill-b",
+      "slug": "demo-skill-b",
+      "description": "Use this skill whenever working with demo-domain-b — covers its APIs, idioms, and gotchas. Trigger on mentions of demo-domain-b or related tasks.",
+      "scopeBoundaries": "Covers demo-domain-b only; not demo-domain-a.",
+      "sourceDomains": [
+        "demo-domain-b"
+      ]
+    }
+  ]
+}

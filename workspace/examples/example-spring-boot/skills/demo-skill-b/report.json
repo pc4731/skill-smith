@@ -1,0 +1,20 @@
+{
+  "slug": "demo-skill-b",
+  "triggerRate": 1,
+  "falseTriggerRate": 0,
+  "capabilityScore": 0.9,
+  "passed": true,
+  "iterations": 0,
+  "issues": [],
+  "prompts": {
+    "shouldTrigger": [
+      "use demo-skill-b to do X",
+      "build with demo-skill-b",
+      "demo-skill-b task A",
+      "demo-skill-b task B"
+    ],
+    "shouldNot": [
+      "what's the weather today"
+    ]
+  }
+}

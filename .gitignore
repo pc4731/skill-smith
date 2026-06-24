@@ -4,9 +4,11 @@ build/
 *.log
 .DS_Store
 
-# Per-job runtime artifacts (the example fixture is force-added in a later phase)
+# Per-job runtime artifacts; the committed example fixture is the exception.
 workspace/*
 !workspace/.gitkeep
+!workspace/examples/
+!workspace/examples/**
 
 # Local env
 .env

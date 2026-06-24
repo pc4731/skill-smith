@@ -1,0 +1,286 @@
+{
+  "id": "example-spring-boot",
+  "kind": "skill",
+  "status": "done",
+  "description": "Spring Boot REST + SOAP + SQL",
+  "createdAt": "2026-06-24T16:02:26.238Z",
+  "updatedAt": "2026-06-24T16:02:26.977Z",
+  "stages": [
+    {
+      "key": "scope",
+      "status": "done",
+      "startedAt": "2026-06-24T16:02:26.240Z",
+      "endedAt": "2026-06-24T16:02:26.401Z"
+    },
+    {
+      "key": "research",
+      "status": "done",
+      "startedAt": "2026-06-24T16:02:26.404Z",
+      "endedAt": "2026-06-24T16:02:26.447Z"
+    },
+    {
+      "key": "design",
+      "status": "done",
+      "startedAt": "2026-06-24T16:02:26.448Z",
+      "endedAt": "2026-06-24T16:02:26.562Z"
+    },
+    {
+      "key": "generate",
+      "status": "done",
+      "startedAt": "2026-06-24T16:02:26.565Z",
+      "endedAt": "2026-06-24T16:02:26.603Z"
+    },
+    {
+      "key": "test",
+      "status": "done",
+      "startedAt": "2026-06-24T16:02:26.607Z",
+      "endedAt": "2026-06-24T16:02:26.864Z"
+    },
+    {
+      "key": "package",
+      "status": "done",
+      "startedAt": "2026-06-24T16:02:26.956Z",
+      "endedAt": "2026-06-24T16:02:26.977Z"
+    }
+  ],
+  "meter": {
+    "calls": 22,
+    "inputTokens": 316,
+    "outputTokens": 158,
+    "totalCostUsd": 0.0558,
+    "ceiling": 150,
+    "ceilingHit": false
+  },
+  "scope": {
+    "targetStack": "Demo stack",
+    "domains": [
+      "demo-domain-a",
+      "demo-domain-b"
+    ],
+    "likelyTasks": [
+      "scaffold a component",
+      "write a test"
+    ],
+    "questions": [
+      {
+        "id": "q1",
+        "question": "Which variant?",
+        "type": "single",
+        "options": [
+          "A",
+          "B"
+        ]
+      },
+      {
+        "id": "q2",
+        "question": "Which add-ons?",
+        "type": "multi",
+        "options": [
+          "x",
+          "y"
+        ]
+      },
+      {
+        "id": "q3",
+        "question": "Any constraints?",
+        "type": "text"
+      }
+    ],
+    "answers": {
+      "q1": "A",
+      "q2": [
+        "x"
+      ],
+      "q3": ""
+    },
+    "usedDefaults": true
+  },
+  "questions": [
+    {
+      "id": "q1",
+      "question": "Which variant?",
+      "type": "single",
+      "options": [
+        "A",
+        "B"
+      ]
+    },
+    {
+      "id": "q2",
+      "question": "Which add-ons?",
+      "type": "multi",
+      "options": [
+        "x",
+        "y"
+      ]
+    },
+    {
+      "id": "q3",
+      "question": "Any constraints?",
+      "type": "text"
+    }
+  ],
+  "answers": {
+    "q1": "A",
+    "q2": [
+      "x"
+    ],
+    "q3": ""
+  },
+  "research": {
+    "status": "done",
+    "domains": [
+      {
+        "domain": "demo-domain-a",
+        "slug": "demo-domain-a",
+        "status": "done",
+        "summary": {
+          "keyApis": 2,
+          "gotchas": 1,
+          "sources": 2
+        }
+      },
+      {
+        "domain": "demo-domain-b",
+        "slug": "demo-domain-b",
+        "status": "done",
+        "summary": {
+          "keyApis": 2,
+          "gotchas": 1,
+          "sources": 2
+        }
+      }
+    ]
+  },
+  "design": {
+    "status": "done",
+    "skills": [
+      {
+        "name": "demo-skill-a",
+        "slug": "demo-skill-a",
+        "description": "Use this skill whenever working with demo-domain-a — covers its APIs, idioms, and gotchas. Trigger on mentions of demo-domain-a, its components, or related tasks.",
+        "scopeBoundaries": "Covers demo-domain-a only; not demo-domain-b.",
+        "sourceDomains": [
+          "demo-domain-a"
+        ]
+      },
+      {
+        "name": "demo-skill-b",
+        "slug": "demo-skill-b",
+        "description": "Use this skill whenever working with demo-domain-b — covers its APIs, idioms, and gotchas. Trigger on mentions of demo-domain-b or related tasks.",
+        "scopeBoundaries": "Covers demo-domain-b only; not demo-domain-a.",
+        "sourceDomains": [
+          "demo-domain-b"
+        ]
+      }
+    ]
+  },
+  "generation": {
+    "status": "done",
+    "skills": [
+      {
+        "name": "demo-skill-a",
+        "slug": "demo-skill-a",
+        "status": "done",
+        "validation": {
+          "ok": true,
+          "descriptionChars": 167,
+          "bodyLines": 2,
+          "hasReferences": true,
+          "issues": []
+        }
+      },
+      {
+        "name": "demo-skill-b",
+        "slug": "demo-skill-b",
+        "status": "done",
+        "validation": {
+          "ok": true,
+          "descriptionChars": 167,
+          "bodyLines": 2,
+          "hasReferences": true,
+          "issues": []
+        }
+      }
+    ]
+  },
+  "selftest": {
+    "status": "done",
+    "skills": [
+      {
+        "name": "demo-skill-a",
+        "slug": "demo-skill-a",
+        "status": "done",
+        "triggerRate": 1,
+        "falseTriggerRate": 0,
+        "capabilityScore": 0.9,
+        "passed": true,
+        "iterations": 0
+      },
+      {
+        "name": "demo-skill-b",
+        "slug": "demo-skill-b",
+        "status": "done",
+        "triggerRate": 1,
+        "falseTriggerRate": 0,
+        "capabilityScore": 0.9,
+        "passed": true,
+        "iterations": 0
+      }
+    ]
+  },
+  "results": {
+    "status": "done",
+    "skills": [
+      {
+        "name": "demo-skill-a",
+        "slug": "demo-skill-a",
+        "passed": true,
+        "triggerRate": 1,
+        "capabilityScore": 0.9,
+        "descriptionChars": 167,
+        "bodyLines": 2,
+        "sources": [
+          {
+            "title": "Official docs",
+            "url": "https://example.com/docs"
+          },
+          {
+            "title": "Release notes",
+            "url": "https://example.com/releases"
+          }
+        ],
+        "installHints": {
+          "personal": "~/.claude/skills/demo-skill-a/",
+          "project": ".claude/skills/demo-skill-a/"
+        },
+        "packageRelPath": "demo-skill-a.skill"
+      },
+      {
+        "name": "demo-skill-b",
+        "slug": "demo-skill-b",
+        "passed": true,
+        "triggerRate": 1,
+        "capabilityScore": 0.9,
+        "descriptionChars": 167,
+        "bodyLines": 2,
+        "sources": [
+          {
+            "title": "Official docs",
+            "url": "https://example.com/docs"
+          },
+          {
+            "title": "Release notes",
+            "url": "https://example.com/releases"
+          }
+        ],
+        "installHints": {
+          "personal": "~/.claude/skills/demo-skill-b/",
+          "project": ".claude/skills/demo-skill-b/"
+        },
+        "packageRelPath": "demo-skill-b.skill"
+      }
+    ],
+    "packageAllRelPath": "all-skills.zip"
+  }
+}

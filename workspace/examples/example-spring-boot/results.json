@@ -1,0 +1,54 @@
+{
+  "status": "done",
+  "skills": [
+    {
+      "name": "demo-skill-a",
+      "slug": "demo-skill-a",
+      "passed": true,
+      "triggerRate": 1,
+      "capabilityScore": 0.9,
+      "descriptionChars": 167,
+      "bodyLines": 2,
+      "sources": [
+        {
+          "title": "Official docs",
+          "url": "https://example.com/docs"
+        },
+        {
+          "title": "Release notes",
+          "url": "https://example.com/releases"
+        }
+      ],
+      "installHints": {
+        "personal": "~/.claude/skills/demo-skill-a/",
+        "project": ".claude/skills/demo-skill-a/"
+      },
+      "packageRelPath": "demo-skill-a.skill"
+    },
+    {
+      "name": "demo-skill-b",
+      "slug": "demo-skill-b",
+      "passed": true,
+      "triggerRate": 1,
+      "capabilityScore": 0.9,
+      "descriptionChars": 167,
+      "bodyLines": 2,
+      "sources": [
+        {
+          "title": "Official docs",
+          "url": "https://example.com/docs"
+        },
+        {
+          "title": "Release notes",
+          "url": "https://example.com/releases"
+        }
+      ],
+      "installHints": {
+        "personal": "~/.claude/skills/demo-skill-b/",
+        "project": ".claude/skills/demo-skill-b/"
+      },
+      "packageRelPath": "demo-skill-b.skill"
+    }
+  ],
+  "packageAllRelPath": "all-skills.zip"
+}

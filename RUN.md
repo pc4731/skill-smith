@@ -190,6 +190,12 @@ workspace/<jobId>/
   raw/<callId>.ndjson # raw claude output per invocation (debugging / partial recovery)
 ```
 
+A committed **example job** lives at `workspace/examples/example-spring-boot/` — a real, completed
+run (generated with the mock CLI, no secrets) so a fresh clone can browse a finished job's layout
+(`job.json`, `scope.json`, `research/`, `plan.json`, `skills/<slug>/` + `.skill`, `results.json`)
+without running the pipeline. It is a static sample, not a live job (it is not listed by the History
+API, which only reads top-level workspace job dirs).
+
 ## 6. Test
 
 ```bash

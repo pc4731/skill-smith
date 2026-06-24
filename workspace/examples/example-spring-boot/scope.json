@@ -1,0 +1,44 @@
+{
+  "targetStack": "Demo stack",
+  "domains": [
+    "demo-domain-a",
+    "demo-domain-b"
+  ],
+  "likelyTasks": [
+    "scaffold a component",
+    "write a test"
+  ],
+  "questions": [
+    {
+      "id": "q1",
+      "question": "Which variant?",
+      "type": "single",
+      "options": [
+        "A",
+        "B"
+      ]
+    },
+    {
+      "id": "q2",
+      "question": "Which add-ons?",
+      "type": "multi",
+      "options": [
+        "x",
+        "y"
+      ]
+    },
+    {
+      "id": "q3",
+      "question": "Any constraints?",
+      "type": "text"
+    }
+  ],
+  "answers": {
+    "q1": "A",
+    "q2": [
+      "x"
+    ],
+    "q3": ""
+  },
+  "usedDefaults": true
+}
