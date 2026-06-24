@@ -57,6 +57,16 @@ multi-tenant deployment, run the backend in a **network-egress-restricted sandbo
 HTTP(S) and block link-local/metadata/RFC1918 destinations. Researched knowledge is persisted as static
 files (`research/<domain>.json`); no fetched URL is re-fetched or executed by later stages.
 
+## Security note: Stage 3 generation (filesystem writes)
+
+Stage 3 generation grants the engine **`Read` + `Write` + `Edit`** (no Bash, no web) and runs each
+generation with `cwd` set to the job's `skills/<slug>/` directory. Skill Smith's own slug-confinement
+governs where it *reads/validates*, but the `claude` CLI performs the writes and its tool permissions
+are coarse — a generation could in principle write outside the intended directory (absolute paths /
+parent dirs). For any non-local or multi-tenant deployment, run the backend in a **filesystem-restricted
+sandbox** (write access limited to the workspace/job directory). Generated `scripts/` are shipped as
+data and are **never executed** by Skill Smith.
+
 ## CI
 
 `.github/workflows/ci.yml` runs on push/PR: `npm ci` → `npm run typecheck` → `npm run build` →

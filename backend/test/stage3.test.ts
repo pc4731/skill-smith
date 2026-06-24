@@ -21,12 +21,13 @@ async function jobWithApprovedPlan(ctx: any, names: string[]) {
 }
 
 describe("generate tool contract", () => {
-  it("grants file tools but NO web tools to the generate stage", () => {
+  it("grants file tools but NO web tools and NO shell to the generate stage", () => {
     const c = loadConfig({ skipFile: true, env: {} });
     const t = toolsFor(c, "generate");
-    expect(t).toContain("Write");
+    expect(t).toEqual(["Read", "Write", "Edit"]);
     expect(t).not.toContain("WebSearch");
     expect(t).not.toContain("WebFetch");
+    expect(t).not.toContain("Bash"); // no shell for a model authoring files from web-sourced research
   });
 });
 

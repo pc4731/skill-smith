@@ -31,7 +31,7 @@
     "scope": [],
     "research": ["WebSearch", "WebFetch"],
     "design": [],
-    "generate": ["Read", "Write", "Edit", "Bash"],
+    "generate": ["Read", "Write", "Edit"],
     "test": ["Read", "Bash"],
     "package": ["Read", "Bash"]
   },

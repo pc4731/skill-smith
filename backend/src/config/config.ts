@@ -24,7 +24,9 @@ const ToolPermissionsSchema = z.object({
   // an agent ingesting untrusted web content must not also hold shell execution (prompt-injection -> RCE).
   research: z.array(z.string()).default(["WebSearch", "WebFetch"]),
   design: z.array(z.string()).default([]),
-  generate: z.array(z.string()).default(["Read", "Write", "Edit", "Bash"]),
+  // Generation writes the skill directory with Read/Write/Edit. Deliberately NO Bash:
+  // the model authors files from (web-sourced) research, so shell access would be a needless RCE surface.
+  generate: z.array(z.string()).default(["Read", "Write", "Edit"]),
   test: z.array(z.string()).default(["Read", "Bash"]),
   package: z.array(z.string()).default(["Read", "Bash"]),
 });
