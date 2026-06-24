@@ -65,7 +65,11 @@ governs where it *reads/validates*, but the `claude` CLI performs the writes and
 are coarse — a generation could in principle write outside the intended directory (absolute paths /
 parent dirs). For any non-local or multi-tenant deployment, run the backend in a **filesystem-restricted
 sandbox** (write access limited to the workspace/job directory). Generated `scripts/` are shipped as
-data and are **never executed** by Skill Smith.
+data and are **never executed** by Skill Smith. The **Stage 4 capability check** has the same shape:
+it runs an agent with the (model-generated) skill loaded and the same Read/Write/Edit tools, so apply
+the same filesystem-restricted sandbox there. The trigger-reliability judge is never shown the expected
+answer in production (`selfTest.evalLabel` defaults `false`; it is enabled only for the mocked test
+suite), so the measured trigger rate is faithful.
 
 ## CI
 

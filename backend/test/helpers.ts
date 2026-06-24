@@ -26,6 +26,8 @@ export function testConfig(overrides: Partial<Config> = {}): Config {
       workspaceDir: tmpWorkspace(),
       retry: { maxRetries: 2, baseDelayMs: 0, maxDelayMs: 0 },
       ...overrides,
+      // Tests use the mock CLI, which needs the EVAL_EXPECT label to answer the trigger judge.
+      selfTest: { evalLabel: true, ...(overrides.selfTest ?? {}) } as Config["selfTest"],
     },
   });
 }

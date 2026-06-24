@@ -55,6 +55,10 @@ export const ConfigSchema = z.object({
       triggerThreshold: z.number().min(0).max(1).default(0.8),
       trials: z.number().int().min(1).default(3),
       maxIterations: z.number().int().min(1).default(3),
+      // Test-only: include an EVAL_EXPECT label in the trigger-judge prompt so the mock CLI
+      // is deterministic. MUST stay false in production or the judge sees the answer (invalidates
+      // the trigger measurement). Env: SKILL_SMITH_SELFTEST_EVAL_LABEL.
+      evalLabel: z.boolean().default(false),
     })
     .default({}),
   toolPermissions: ToolPermissionsSchema.default({}),
@@ -117,6 +121,8 @@ export function applyEnv(base: Config, env: NodeJS.ProcessEnv = process.env): Co
   if (tr !== undefined) next.selfTest.trials = tr;
   const mi = num(env.SKILL_SMITH_SELFTEST_MAX_ITERATIONS);
   if (mi !== undefined) next.selfTest.maxIterations = mi;
+  const el = bool(env.SKILL_SMITH_SELFTEST_EVAL_LABEL);
+  if (el !== undefined) next.selfTest.evalLabel = el;
   return next;
 }
 

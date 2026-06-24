@@ -37,11 +37,16 @@ describe("test (self-test) tool contract", () => {
     expect(toolsFor(c, "test")).not.toContain("Bash");
     expect(toolsFor(c, "test")).not.toContain("WebFetch");
   });
+
+  it("does NOT leak the expected answer to the judge in production (evalLabel default false)", () => {
+    const c = loadConfig({ skipFile: true, env: {} });
+    expect(c.selfTest.evalLabel).toBe(false);
+  });
 });
 
 describe("runStage4 (self-test)", () => {
   it("measures trigger reliability + capability and writes a passing report.json", async () => {
-    const ctx = buildContext({ config: testConfig({ selfTest: { triggerThreshold: 0.8, trials: 1, maxIterations: 3 } }), heartbeatMs: 0 });
+    const ctx = buildContext({ config: testConfig({ selfTest: { triggerThreshold: 0.8, trials: 1, maxIterations: 3, evalLabel: true } }), heartbeatMs: 0 });
     const job = await jobWithGeneratedSkills(ctx, [planItem("alpha-skill")]);
     await runStage4(ctx, job.id);
 
@@ -59,7 +64,7 @@ describe("runStage4 (self-test)", () => {
   });
 
   it("rewrites an under-triggering description and re-tests until it clears the threshold", async () => {
-    const ctx = buildContext({ config: testConfig({ selfTest: { triggerThreshold: 0.8, trials: 1, maxIterations: 3 } }), heartbeatMs: 0 });
+    const ctx = buildContext({ config: testConfig({ selfTest: { triggerThreshold: 0.8, trials: 1, maxIterations: 3, evalLabel: true } }), heartbeatMs: 0 });
     const job = await jobWithGeneratedSkills(ctx, [planItem("lowtrig-skill")]);
     await runStage4(ctx, job.id);
 
@@ -72,7 +77,7 @@ describe("runStage4 (self-test)", () => {
   });
 
   it("iterates (capped) on capability failure, ending done_with_warnings", async () => {
-    const ctx = buildContext({ config: testConfig({ selfTest: { triggerThreshold: 0.8, trials: 1, maxIterations: 2 } }), heartbeatMs: 0 });
+    const ctx = buildContext({ config: testConfig({ selfTest: { triggerThreshold: 0.8, trials: 1, maxIterations: 2, evalLabel: true } }), heartbeatMs: 0 });
     const job = await jobWithGeneratedSkills(ctx, [planItem("good-skill"), planItem("lowcap-skill")]);
     await runStage4(ctx, job.id);
 

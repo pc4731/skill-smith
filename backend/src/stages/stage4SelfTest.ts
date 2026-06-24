@@ -235,15 +235,16 @@ async function measureTrigger(
 }
 
 async function judge(ctx: AppContext, jobId: string, s: SkillContext, userPrompt: string, expect: string): Promise<string> {
+  const lines = [
+    "Given these skills (name + description only), which ONE would you load for the user prompt? Answer with its slug or 'none'.",
+    `- ${s.skill.slug}: ${s.description}`,
+    `User prompt: ${userPrompt}`,
+  ];
+  // The expected answer is NEVER shown to a real judge (it would invalidate the measurement).
+  // It is only appended in test/eval mode so the mock CLI is deterministic.
+  if (ctx.config.selfTest.evalLabel) lines.push(`EVAL_EXPECT=${expect}`);
   const res = await ctx.claude.structured({
-    // The judge is given ONLY the skill name+description (no bodies). EVAL_EXPECT is a
-    // deterministic-testing label the mock reads; a real judge ignores it (TODO: withhold for real fidelity).
-    prompt: [
-      "Given these skills (name + description only), which ONE would you load for the user prompt? Answer with its slug or 'none'.",
-      `- ${s.skill.slug}: ${s.description}`,
-      `User prompt: ${userPrompt}`,
-      `EVAL_EXPECT=${expect}`,
-    ].join("\n"),
+    prompt: lines.join("\n"),
     jsonSchema: JUDGE_SCHEMA,
     tools: [],
     cwd: ctx.jobStore.dir(jobId),
