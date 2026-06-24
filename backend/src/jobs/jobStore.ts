@@ -4,8 +4,8 @@ import fsp from "node:fs/promises";
 import path from "node:path";
 import { StageKeys } from "../config/config.js";
 import { emptyMeter } from "../meter/costMeter.js";
-import { eventsFile, jobDir, jobFile, planFile, rawFile, researchFile, scopeFile } from "./jobPaths.js";
-import type { Job, JobKind, ResearchBrief, Scope, SkillPlanItem, StageState } from "./types.js";
+import { eventsFile, jobDir, jobFile, planFile, rawFile, reportFile, researchFile, scopeFile } from "./jobPaths.js";
+import type { Job, JobKind, ResearchBrief, Scope, SkillPlanItem, SkillReport, StageState } from "./types.js";
 
 export interface CreateJobInput {
   description: string;
@@ -113,6 +113,11 @@ export class JobStore {
   /** Persist the Stage-2 approved skill-set plan to plan.json (atomic). */
   async writePlan(id: string, skills: SkillPlanItem[]): Promise<void> {
     await this.writeAtomic(planFile(this.workspaceDir, id), JSON.stringify({ skills }, null, 2));
+  }
+
+  /** Persist a Stage-4 per-skill self-test report (atomic). */
+  async writeReport(id: string, slug: string, report: SkillReport): Promise<void> {
+    await this.writeAtomic(reportFile(this.workspaceDir, id, slug), JSON.stringify(report, null, 2));
   }
 
   async appendEvent(id: string, name: string, data: unknown): Promise<void> {

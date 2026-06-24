@@ -71,3 +71,8 @@ export function skillsDir(workspaceDir: string, jobId: string): string {
 export function skillDir(workspaceDir: string, jobId: string, name: string): string {
   return path.join(skillsDir(workspaceDir, jobId), slug(name));
 }
+
+/** Stage-4 per-skill self-test report. */
+export function reportFile(workspaceDir: string, jobId: string, name: string): string {
+  return path.join(skillDir(workspaceDir, jobId, name), "report.json");
+}

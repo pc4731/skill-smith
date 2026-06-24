@@ -27,7 +27,9 @@ const ToolPermissionsSchema = z.object({
   // Generation writes the skill directory with Read/Write/Edit. Deliberately NO Bash:
   // the model authors files from (web-sourced) research, so shell access would be a needless RCE surface.
   generate: z.array(z.string()).default(["Read", "Write", "Edit"]),
-  test: z.array(z.string()).default(["Read", "Bash"]),
+  // Stage-4 capability check runs a representative task with the (model-generated) skill loaded.
+  // Read/Write/Edit only — NO Bash (no shell for an agent running untrusted generated content), NO web.
+  test: z.array(z.string()).default(["Read", "Write", "Edit"]),
   package: z.array(z.string()).default(["Read", "Bash"]),
 });
 
@@ -44,8 +46,17 @@ export const ConfigSchema = z.object({
   /** Process-wide cap on claude invocations per UTC day (0 = unlimited). */
   globalDailyInvocationCeiling: z.number().int().min(0).default(0),
   maxParallelism: z.number().int().min(1).default(3),
-  perJobInvocationCeiling: z.number().int().min(1).default(40),
+  // Stage 4 (self-test) is invocation-heavy (prompt-gen + judge*trials + capability + grade per skill),
+  // so the per-job ceiling is generous; the global daily ceiling is the harder cost cap.
+  perJobInvocationCeiling: z.number().int().min(1).default(150),
   retry: RetrySchema.default({}),
+  selfTest: z
+    .object({
+      triggerThreshold: z.number().min(0).max(1).default(0.8),
+      trials: z.number().int().min(1).default(3),
+      maxIterations: z.number().int().min(1).default(3),
+    })
+    .default({}),
   toolPermissions: ToolPermissionsSchema.default({}),
 });
 
@@ -77,6 +88,7 @@ export function applyEnv(base: Config, env: NodeJS.ProcessEnv = process.env): Co
   const next: Config = {
     ...base,
     retry: { ...base.retry },
+    selfTest: { ...base.selfTest },
     toolPermissions: { ...base.toolPermissions },
   };
   if (env.SKILL_SMITH_MODEL !== undefined) next.model = env.SKILL_SMITH_MODEL;
@@ -99,6 +111,12 @@ export function applyEnv(base: Config, env: NodeJS.ProcessEnv = process.env): Co
   if (rb !== undefined) next.retry.baseDelayMs = rb;
   const rx = num(env.SKILL_SMITH_RETRY_MAX_DELAY_MS);
   if (rx !== undefined) next.retry.maxDelayMs = rx;
+  const tt = num(env.SKILL_SMITH_TRIGGER_THRESHOLD);
+  if (tt !== undefined) next.selfTest.triggerThreshold = tt;
+  const tr = num(env.SKILL_SMITH_SELFTEST_TRIALS);
+  if (tr !== undefined) next.selfTest.trials = tr;
+  const mi = num(env.SKILL_SMITH_SELFTEST_MAX_ITERATIONS);
+  if (mi !== undefined) next.selfTest.maxIterations = mi;
   return next;
 }
 

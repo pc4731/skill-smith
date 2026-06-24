@@ -67,9 +67,37 @@ if (outputFormat === "json") {
   };
   if (hasSchema) {
     const schemaArg = flagValue("--json-schema") || "";
+    const jp = flagValue("-p") || "";
     const isDesign = schemaArg.includes("scopeBoundaries") || schemaArg.includes("sourceDomains");
     const isResearch = schemaArg.includes("key_apis") || schemaArg.includes("version_notes");
-    if (isDesign) {
+    const isTriggerPrompts = schemaArg.includes("shouldTrigger");
+    const isJudge = schemaArg.includes('"skill"') && !schemaArg.includes("skills");
+    const isGrade = schemaArg.includes('"score"') && schemaArg.includes('"passed"');
+    const isDescRewrite = schemaArg.includes('"description"') && !isDesign && !isResearch;
+    if (isTriggerPrompts) {
+      const m = jp.match(/named "([^"]+)"/);
+      const nm = m ? m[1] : "skill";
+      out.structured_output = {
+        shouldTrigger: [`use ${nm} to do X`, `build with ${nm}`, `${nm} task A`, `${nm} task B`],
+        shouldNot: ["what's the weather today"],
+      };
+    } else if (isJudge) {
+      const exp = (jp.match(/EVAL_EXPECT=([^\s]+)/) || [])[1] || "none";
+      let answer = exp;
+      // Simulate under-trigger for a 'lowtrig' skill until its description is rewritten ("PUSHY-REWRITTEN").
+      if (exp !== "none" && exp.includes("lowtrig") && !jp.includes("PUSHY-REWRITTEN")) answer = "none";
+      out.structured_output = { skill: answer };
+    } else if (isGrade) {
+      const fail = jp.includes("lowcap"); // 'lowcap' slug forces a failing capability grade (avoids the 'fail' SKILLGEN hook)
+      out.structured_output = fail
+        ? { score: 0.2, passed: false, issues: ["used a wrong API; pitfall not avoided"] }
+        : { score: 0.9, passed: true, issues: [] };
+    } else if (isDescRewrite) {
+      const slug = (jp.match(/DESC_SLUG=([a-z0-9-]+)/) || [])[1] || "skill";
+      out.structured_output = {
+        description: `Use this skill PUSHY-REWRITTEN whenever you work with ${slug}; trigger on its APIs, components, commands, and related tasks.`,
+      };
+    } else if (isDesign) {
       // Stage-2 skill-set plan (one-domain-per-skill, pushy descriptions).
       out.structured_output = {
         skills: [
@@ -162,6 +190,15 @@ if (streamPrompt.includes("[[SKILLGEN]]")) {
     total_cost_usd: 0.004,
     usage: { input_tokens: 20, output_tokens: 10 },
   });
+  process.exit(0);
+}
+
+// Stage-4 capability task: produce some output for the grader (writes nothing destructive).
+if (streamPrompt.includes("[[CAPABILITY]]")) {
+  const sk = (streamPrompt.match(/SKILL_SLUG=([a-z0-9-]+)/) || [])[1] || "skill";
+  emit({ type: "system", subtype: "init", session_id: "sess-cap", model: "claude-opus-4-8" });
+  emit({ type: "stream_event", event: { delta: { type: "text_delta", text: `Completed a representative task for ${sk} using the documented APIs.` } } });
+  emit({ type: "result", subtype: "success", is_error: false, session_id: "sess-cap", total_cost_usd: 0.005, usage: { input_tokens: 30, output_tokens: 15 } });
   process.exit(0);
 }
 

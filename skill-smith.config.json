@@ -17,7 +17,7 @@
   "maxParallelism": 3,
   "_maxParallelism": "Max concurrent `claude -p` invocations across all jobs (cost/rate guardrail). Env: SKILL_SMITH_MAX_PARALLELISM.",
 
-  "perJobInvocationCeiling": 40,
+  "perJobInvocationCeiling": 150,
   "_perJobInvocationCeiling": "Hard cap on claude invocations per job; the pipeline stops gracefully when hit. Env: SKILL_SMITH_INVOCATION_CEILING.",
 
   "retry": {
@@ -25,6 +25,13 @@
     "baseDelayMs": 1000,
     "maxDelayMs": 30000
   },
+
+  "selfTest": {
+    "triggerThreshold": 0.8,
+    "trials": 3,
+    "maxIterations": 3
+  },
+  "_selfTest": "Stage 4 self-test: trigger rate must clear triggerThreshold (judged over `trials` runs); failing skills are rewritten/re-generated up to maxIterations. Env: SKILL_SMITH_TRIGGER_THRESHOLD, SKILL_SMITH_SELFTEST_TRIALS, SKILL_SMITH_SELFTEST_MAX_ITERATIONS.",
   "_retry": "Retry-with-backoff for retryable claude failures (rate_limit/overloaded/server_error/connection). Env: SKILL_SMITH_RETRY_MAX, SKILL_SMITH_RETRY_BASE_DELAY_MS, SKILL_SMITH_RETRY_MAX_DELAY_MS.",
 
   "toolPermissions": {
@@ -32,7 +39,7 @@
     "research": ["WebSearch", "WebFetch"],
     "design": [],
     "generate": ["Read", "Write", "Edit"],
-    "test": ["Read", "Bash"],
+    "test": ["Read", "Write", "Edit"],
     "package": ["Read", "Bash"]
   },
   "_toolPermissions": "Per-stage --allowed-tools. Only the research stage may use the web. Stages not listed get no tools."

@@ -120,9 +120,16 @@ export async function runStage3(ctx: AppContext, jobId: string): Promise<void> {
     status: finished.generation?.status === "failed" ? "failed" : "done",
   });
   await emitJob(ctx, finished);
+
+  // Advance into Stage 4 self-test (unless generation wholly failed).
+  if (finished.generation?.status !== "failed") {
+    const { runStage4 } = await import("./stage4SelfTest.js");
+    void runStage4(ctx, jobId);
+  }
 }
 
-async function generateOne(
+/** Generate one skill directory (exported so Stage 4 can re-generate on failure). */
+export async function generateOne(
   ctx: AppContext,
   jobId: string,
   skill: SkillPlanItem,
