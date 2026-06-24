@@ -1,0 +1,42 @@
+{
+  "at": "2026-06-24T04:44:11.316Z",
+  "base": "http://127.0.0.1:4558",
+  "checks": [
+    {
+      "name": "backend boots",
+      "target": "GET /api/health",
+      "result": "PASS",
+      "detail": "model=claude-opus-4-8"
+    },
+    {
+      "name": "reached design approval gate",
+      "target": "job.design.status",
+      "result": "PASS",
+      "detail": "skills=2"
+    },
+    {
+      "name": "Stage 4 self-test completes",
+      "target": "job.selftest.status",
+      "result": "PASS",
+      "detail": "status=done skills=2"
+    },
+    {
+      "name": "Test stepper step done",
+      "target": "job.stages",
+      "result": "PASS",
+      "detail": "test stage=done"
+    },
+    {
+      "name": "report.json written per skill with metrics",
+      "target": "skills/<slug>/report.json",
+      "result": "PASS",
+      "detail": "demo-skill-a:passed=true trig=1 report-ok demo-skill-b:passed=true trig=1 report-ok"
+    },
+    {
+      "name": "skills passed self-test",
+      "target": "selftest.skills.passed",
+      "result": "PASS",
+      "detail": "true,true"
+    }
+  ]
+}
