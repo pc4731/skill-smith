@@ -5,7 +5,7 @@ import { allPackagePath, isValidJobId, packagePath, skillDir } from "../jobs/job
 import { emitJob } from "../runtime/broadcast.js";
 import { runSayHi } from "../runtime/sayHi.js";
 import { applyAnswers, runStage0 } from "../stages/stage0Scope.js";
-import { runStage1 } from "../stages/stage1Research.js";
+import { resumeStage1, runStage1 } from "../stages/stage1Research.js";
 import { applyPlan } from "../stages/stage2Design.js";
 import path from "node:path";
 
@@ -149,7 +149,7 @@ export function createRouter(ctx: AppContext): Router {
       res.status(409).json({ error: "research already running" });
       return;
     }
-    void runStage1(ctx, req.params.id);
+    void resumeStage1(ctx, req.params.id);
     res.status(202).json({ ok: true });
   });
 

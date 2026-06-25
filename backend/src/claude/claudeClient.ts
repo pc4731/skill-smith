@@ -27,6 +27,13 @@ export interface StructuredOptions<T = unknown> {
   jsonSchema: object;
   tools?: string[];
   cwd?: string;
+  /**
+   * Pin this call to a specific CLI session id. Combined with `resume`, this lets
+   * an interrupted call continue its existing conversation instead of restarting.
+   */
+  sessionId?: string;
+  /** Resume `sessionId` (continue a prior, interrupted session) rather than starting it fresh. */
+  resume?: boolean;
   onRaw?: (chunk: string) => void;
   onAttempt?: (attempt: number, maxRetries: number, delayMs: number, reason: string) => void;
   signal?: AbortSignal;
@@ -131,6 +138,11 @@ export class ClaudeClient {
     ];
     if (this.config.bare) args.push("--bare");
     if (this.config.model) args.push("--model", this.config.model);
+    if (opts.sessionId) {
+      // --resume continues an existing (interrupted) session; --session-id pins a fresh one.
+      if (opts.resume) args.push("--resume", opts.sessionId);
+      else args.push("--session-id", opts.sessionId);
+    }
     if (opts.tools && opts.tools.length > 0) args.push("--allowed-tools", opts.tools.join(","));
 
     return this.withRetry(opts.onAttempt, opts.signal, async () => {

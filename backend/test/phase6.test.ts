@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { buildContext } from "../src/context.js";
 import { reconcileOrphans } from "../src/runtime/reconcile.js";
 import { createApp } from "../src/server.js";
-import { testConfig } from "./helpers.js";
+import { sleep, testConfig } from "./helpers.js";
 
 describe("Phase 6 — history, re-run, restart reconciliation", () => {
   it("GET /api/jobs returns compact summaries, newest-first", async () => {
@@ -62,8 +62,9 @@ describe("Phase 6 — history, re-run, restart reconciliation", () => {
       j.status = "awaiting_input";
     });
 
+    // No scope on the running job → research can't be resumed → it's reconciled to failed.
     const n = await reconcileOrphans(ctx);
-    expect(n).toBe(1);
+    expect(n).toEqual({ reconciled: 1, resumed: 0 });
 
     const afterRunning = await ctx.jobStore.get(running.id);
     expect(afterRunning?.status).toBe("failed");
@@ -72,5 +73,51 @@ describe("Phase 6 — history, re-run, restart reconciliation", () => {
 
     const afterParked = await ctx.jobStore.get(parked.id);
     expect(afterParked?.status).toBe("awaiting_input"); // untouched
+  });
+
+  it("reconcileOrphans auto-resumes a research-interrupted job instead of failing it", async () => {
+    const config = testConfig();
+    const ctx = buildContext({ config, heartbeatMs: 0 });
+    const domains = ["demo-domain-a", "demo-domain-b"];
+    const job = await ctx.jobStore.create({ description: "interrupted research", ceiling: 150 });
+    await ctx.jobStore.update(job.id, (j) => {
+      j.scope = { targetStack: "Demo", domains, likelyTasks: [], questions: [], answers: {} };
+      j.research = {
+        status: "running",
+        domains: domains.map((d) => ({ domain: d, slug: d, status: "running" as const })),
+      };
+      const s = j.stages.find((x) => x.key === "research");
+      if (s) s.status = "running";
+      j.status = "active";
+    });
+    // Both briefs already persisted on disk → resume reuses them, nothing re-runs.
+    for (const d of domains) {
+      await ctx.jobStore.writeBrief(job.id, d, {
+        domain: d,
+        key_apis: ["X.create()"],
+        idioms: ["compose"],
+        gotchas: ["v2 breakage"],
+        version_notes: "v2 current",
+        sources: [
+          { title: "Docs", url: "https://example.com/docs" },
+          { title: "Releases", url: "https://example.com/rel" },
+        ],
+      });
+    }
+
+    const n = await reconcileOrphans(ctx);
+    expect(n).toEqual({ reconciled: 0, resumed: 1 });
+
+    // Wait for the fire-and-forget resume to settle the research stage to done.
+    let research;
+    for (let i = 0; i < 50; i++) {
+      const after = await ctx.jobStore.get(job.id);
+      research = after?.stages.find((s) => s.key === "research");
+      if (research?.status === "done") break;
+      await sleep(10);
+    }
+    expect(research?.status).toBe("done");
+    const after = await ctx.jobStore.get(job.id);
+    expect(after?.status).not.toBe("failed"); // resumed, not reconciled to failed
   });
 });

@@ -7,8 +7,10 @@ const { app, ctx } = createApp();
 const HOST = process.env.SKILL_SMITH_HOST ?? ctx.config.host;
 
 async function main(): Promise<void> {
-  // In-memory stage runners don't survive a restart — flip any interrupted jobs to failed.
-  const reconciled = await reconcileOrphans(ctx).catch(() => 0);
+  // In-memory stage runners don't survive a restart: auto-resume interrupted
+  // research jobs, and flip any other interrupted job to failed.
+  const { reconciled, resumed } = await reconcileOrphans(ctx).catch(() => ({ reconciled: 0, resumed: 0 }));
+  if (resumed > 0) console.log(`[skill-smith] auto-resumed ${resumed} interrupted research job(s) after restart`);
   if (reconciled > 0) console.log(`[skill-smith] reconciled ${reconciled} interrupted job(s) after restart`);
 
   app.listen(PORT, HOST, () => {

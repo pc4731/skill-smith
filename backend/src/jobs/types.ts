@@ -70,6 +70,13 @@ export interface ResearchDomainState {
   slug: string;
   status: ResearchDomainStatus;
   error?: string;
+  /**
+   * Stable Claude CLI session id for this domain's research call. Assigned before
+   * the call is spawned and persisted, so an interrupted call (server restart,
+   * token expiry) can be RESUMED with `--resume <sessionId>` instead of starting
+   * the agentic web-research loop over from scratch.
+   */
+  sessionId?: string;
   /** Compact summary kept in job.json; the full brief lives in research/<slug>.json. */
   summary?: { keyApis: number; gotchas: number; sources: number };
 }

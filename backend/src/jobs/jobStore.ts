@@ -126,6 +126,16 @@ export class JobStore {
     await this.writeAtomic(researchFile(this.workspaceDir, id, domain), JSON.stringify(brief, null, 2));
   }
 
+  /** Check whether a Stage-1 research brief already exists on disk for a given domain. */
+  async hasBrief(id: string, domain: string): Promise<boolean> {
+    try {
+      await fsp.access(researchFile(this.workspaceDir, id, domain));
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
   /** Persist the Stage-2 approved skill-set plan to plan.json (atomic). */
   async writePlan(id: string, skills: SkillPlanItem[]): Promise<void> {
     await this.writeAtomic(planFile(this.workspaceDir, id), JSON.stringify({ skills }, null, 2));
