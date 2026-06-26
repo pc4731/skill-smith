@@ -4,9 +4,10 @@ import path from "node:path";
 import { toolsFor } from "../config/config.js";
 import type { AppContext } from "../context.js";
 import { skillDir } from "../jobs/jobPaths.js";
-import type { GeneratedSkill, SkillPlanItem, SkillValidation } from "../jobs/types.js";
+import type { GeneratedSkill, LibrarySkill, SkillPlanItem, SkillValidation } from "../jobs/types.js";
 import { applyResult, ceilingReached } from "../meter/costMeter.js";
 import { emit, emitJob } from "../runtime/broadcast.js";
+import { bestMatch, seedFromMatch } from "../skills/reuse.js";
 
 const DESC_MAX = 1536;
 const BODY_MAX_LINES = 500;
@@ -27,6 +28,31 @@ export function generationPrompt(skill: SkillPlanItem, briefsText: string): stri
     `Draft description to refine: ${skill.description}`,
     "",
     "Research to ground the skill in (do not invent APIs or versions):",
+    briefsText || "(none)",
+  ].join("\n");
+}
+
+/**
+ * Variant prompt used when an existing related skill was seeded into the CWD.
+ * The model ADAPTS the existing files instead of writing from scratch — reusing
+ * proven structure and only changing what the new requirement needs.
+ */
+export function adaptPrompt(skill: SkillPlanItem, briefsText: string, fromName: string): string {
+  return [
+    `[[SKILLGEN]] SKILL_SLUG=${skill.slug}`,
+    `An existing, related skill ("${fromName}") has been COPIED into the CURRENT WORKING DIRECTORY as a starting point.`,
+    `Read its SKILL.md and references/, then ADAPT them in place to become "${skill.name}".`,
+    "",
+    "Rules:",
+    "- Preserve what already fits; change only what the new requirement needs. Do not rewrite wholesale.",
+    `- Update the frontmatter \`name\` to "${skill.name}" and refine the \`description\` (load-bearing, slightly 'pushy', under ${DESC_MAX} characters).`,
+    `- Keep the body under ${BODY_MAX_LINES} lines; heavy detail stays in references/*.md.`,
+    "- Remove anything from the seed that is out of scope for the new skill.",
+    "",
+    `Scope boundaries: ${skill.scopeBoundaries}`,
+    `Draft description to refine: ${skill.description}`,
+    "",
+    "Research to ground the adaptation in (do not invent APIs or versions):",
     briefsText || "(none)",
   ].join("\n");
 }
@@ -98,7 +124,11 @@ export async function runStage3(ctx: AppContext, jobId: string): Promise<void> {
 
   const tools = toolsFor(ctx.config, "generate"); // Read/Write/Edit/Bash — NO web
 
-  await Promise.allSettled(plan.map((skill) => generateOne(ctx, jobId, skill, briefsText, tools)));
+  // Opt-in skill reuse: load the cross-job library once so each skill can seed
+  // from a matching existing skill instead of generating from scratch.
+  const library = job?.reuseSkills ? await ctx.jobStore.listSkills() : undefined;
+
+  await Promise.allSettled(plan.map((skill) => generateOne(ctx, jobId, skill, briefsText, tools, library)));
 
   const finished = await ctx.jobStore.update(jobId, (j) => {
     const states = j.generation?.skills ?? [];
@@ -135,6 +165,7 @@ export async function generateOne(
   skill: SkillPlanItem,
   briefsText: string,
   tools: string[],
+  library?: LibrarySkill[],
 ): Promise<void> {
   const dir = skillDir(ctx.config.workspaceDir, jobId, skill.slug);
 
@@ -147,8 +178,30 @@ export async function generateOne(
 
   try {
     await fsp.mkdir(dir, { recursive: true });
+
+    // Opt-in reuse: if a related library skill scores above threshold, copy it in
+    // as a seed and switch to the ADAPT prompt. Falls back to scratch on any issue.
+    let reusedFrom: GeneratedSkill["reusedFrom"];
+    let prompt = generationPrompt(skill, briefsText);
+    if (library && library.length > 0) {
+      const match = bestMatch(skill, library, jobId);
+      if (match) {
+        const srcDir = path.join(ctx.jobStore.skillsDir(match.skill.jobId), match.skill.slug);
+        if (await seedFromMatch(srcDir, dir)) {
+          reusedFrom = { jobId: match.skill.jobId, slug: match.skill.slug, name: match.skill.name };
+          prompt = adaptPrompt(skill, briefsText, match.skill.name);
+          await ctx.jobStore.update(jobId, (j) => {
+            const gs = j.generation?.skills.find((s) => s.slug === skill.slug);
+            if (gs) gs.reusedFrom = reusedFrom;
+          });
+          await emit(ctx, jobId, "skill", { name: skill.name, slug: skill.slug, status: "running", reusedFrom });
+          console.log(`[skill-smith] reuse skill="${skill.slug}" seeded-from="${match.skill.slug}" score=${match.score.toFixed(2)}`);
+        }
+      }
+    }
+
     const res = await ctx.claude.stream({
-      prompt: generationPrompt(skill, briefsText),
+      prompt,
       tools,
       cwd: dir, // the model writes the skill directory in here
       onRaw: (chunk) => void ctx.jobStore.appendRaw(jobId, `gen-${skill.slug}`, chunk),
@@ -173,6 +226,7 @@ export async function generateOne(
       slug: skill.slug,
       status: validation.ok ? "done" : "failed",
       validation,
+      ...(reusedFrom ? { reusedFrom } : {}),
     });
   } catch (err) {
     await markSkill(ctx, jobId, skill, "failed", err instanceof Error ? err.message : String(err));

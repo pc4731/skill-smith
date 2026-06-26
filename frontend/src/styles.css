@@ -331,6 +331,25 @@ a {
   font-size: var(--text-sm);
   font-weight: 400;
 }
+.rc-retry {
+  float: right;
+  font-size: var(--text-sm);
+  font-weight: 500;
+  padding: var(--space-1) var(--space-3);
+  border: 1px solid var(--color-danger);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-danger);
+  cursor: pointer;
+}
+.rc-retry:hover:not(:disabled) {
+  background: var(--color-danger);
+  color: #fff;
+}
+.rc-retry:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
 .research-cards {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
@@ -365,6 +384,55 @@ a {
 .rc-summary dt { font-size: var(--text-xs); color: var(--color-text-muted); }
 .rc-summary dd { margin: 0; font-family: var(--font-mono); font-weight: 600; }
 .rc-error { color: var(--color-danger); font-size: var(--text-sm); margin: var(--space-2) 0 0; }
+.research-cost { font-family: var(--font-mono); font-size: var(--text-sm); color: var(--color-text-muted); font-weight: 500; }
+
+/* Reuse provenance badge on a generated skill */
+.sc-reused {
+  margin: var(--space-1) 0 0;
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+/* Intake reuse toggle */
+.prompt-reuse {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: var(--space-2) 0 0;
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+/* Skill library */
+.library { max-width: 880px; margin: 0 auto; padding: var(--space-4); }
+.library-search {
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  margin: var(--space-3) 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+.library-list { list-style: none; padding: 0; margin: 0; display: grid; gap: var(--space-3); }
+.library-item {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  background: var(--color-surface);
+}
+.library-head { display: flex; justify-content: space-between; align-items: baseline; gap: var(--space-3); }
+.library-name { font-weight: 600; }
+.library-download { font-family: var(--font-mono); font-size: var(--text-sm); }
+.library-desc { margin: var(--space-2) 0; color: var(--color-text); font-size: var(--text-sm); }
+.library-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
 
 /* Skill plan (approve gate) */
 .skill-plan-title, .skills-title { font-size: var(--text-lg); margin: var(--space-4) 0 var(--space-2); }

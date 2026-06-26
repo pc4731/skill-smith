@@ -1,4 +1,3 @@
-import { randomUUID } from "node:crypto";
 import { z } from "zod";
 import { toolsFor } from "../config/config.js";
 import type { AppContext } from "../context.js";
@@ -181,57 +180,31 @@ async function researchOneDomain(
     return;
   }
 
-  // A persisted sessionId means a prior attempt already started this domain's
-  // research; resume it so the agentic web-research loop continues instead of
-  // restarting. A fresh domain gets a new id that we persist BEFORE spawning, so
-  // even an immediate interruption leaves something to resume from.
-  const existing = current?.research?.domains.find((d) => d.domain === domain);
-  const sessionId = existing?.sessionId ?? randomUUID();
-  const resuming = Boolean(existing?.sessionId);
-
-  await markDomainRunning(ctx, jobId, domain, sessionId);
+  await markDomain(ctx, jobId, domain, "running");
 
   try {
-    const callOnce = (resume: boolean) =>
-      ctx.claude.structured({
-        prompt: researchPrompt(targetStack, domain, answers),
-        jsonSchema: RESEARCH_JSON_SCHEMA,
-        tools, // research-stage tools ONLY (WebSearch/WebFetch — no Bash, no shell exec)
-        cwd: ctx.jobStore.dir(jobId),
-        sessionId,
-        resume,
-        onRaw: (chunk) => void ctx.jobStore.appendRaw(jobId, callId, chunk),
-        onAttempt: (attempt, maxRetries, delayMs, reason) =>
-          ctx.sse.broadcast(jobId, "retry", { domain, attempt, maxRetries, delayMs, reason }),
-      });
-
-    // If resuming a stale/missing session fails, fall back to a clean fresh run
-    // (a brand-new session id) — never worse than the old always-start-over path.
-    let res;
-    if (resuming) {
-      try {
-        res = await callOnce(true);
-      } catch {
-        const freshId = randomUUID();
-        await markDomainRunning(ctx, jobId, domain, freshId);
-        res = await ctx.claude.structured({
-          prompt: researchPrompt(targetStack, domain, answers),
-          jsonSchema: RESEARCH_JSON_SCHEMA,
-          tools,
-          cwd: ctx.jobStore.dir(jobId),
-          sessionId: freshId,
-          resume: false,
-          onRaw: (chunk) => void ctx.jobStore.appendRaw(jobId, callId, chunk),
-          onAttempt: (attempt, maxRetries, delayMs, reason) =>
-            ctx.sse.broadcast(jobId, "retry", { domain, attempt, maxRetries, delayMs, reason }),
-        });
-      }
-    } else {
-      res = await callOnce(false);
-    }
+    // One clean call per domain. We intentionally do NOT resume a prior CLI
+    // session: resuming replays the whole accumulated transcript (every fetched
+    // page) as input tokens, which is exactly the cost we're trying to avoid.
+    // Resume is handled at the DOMAIN granularity instead — completed domains are
+    // skipped via their brief on disk (see resumeStage1), which replays nothing.
+    const res = await ctx.claude.structured({
+      prompt: researchPrompt(targetStack, domain, answers),
+      jsonSchema: RESEARCH_JSON_SCHEMA,
+      tools, // research-stage tools ONLY (WebSearch/WebFetch — no Bash, no shell exec)
+      cwd: ctx.jobStore.dir(jobId),
+      onRaw: (chunk) => void ctx.jobStore.appendRaw(jobId, callId, chunk),
+      onAttempt: (attempt, maxRetries, delayMs, reason) =>
+        ctx.sse.broadcast(jobId, "retry", { domain, attempt, maxRetries, delayMs, reason }),
+    });
 
     const brief: ResearchBrief = { ...BriefSchema.parse(res.structuredOutput), domain };
     await ctx.jobStore.writeBrief(jobId, domain, brief);
+
+    // Per-domain token/cost line so you can see exactly where research spends.
+    console.log(
+      `[skill-smith] research domain="${domain}" in=${res.info.inputTokens} out=${res.info.outputTokens} cost=$${res.info.totalCostUsd.toFixed(4)}`,
+    );
 
     const updated = await ctx.jobStore.update(jobId, (j) => {
       j.meter = applyResult(j.meter, res.info);
@@ -239,6 +212,7 @@ async function researchOneDomain(
       const ds = j.research?.domains.find((d) => d.domain === domain);
       if (ds) {
         ds.status = "done";
+        ds.cost = res.info.totalCostUsd;
         ds.summary = {
           keyApis: brief.key_apis.length,
           gotchas: brief.gotchas.length,
@@ -255,24 +229,6 @@ async function researchOneDomain(
   } catch (err) {
     await markDomain(ctx, jobId, domain, "failed", err instanceof Error ? err.message : String(err));
   }
-}
-
-/** Mark a domain running and persist its session id (so an interruption is resumable). */
-async function markDomainRunning(
-  ctx: AppContext,
-  jobId: string,
-  domain: string,
-  sessionId: string,
-): Promise<void> {
-  await ctx.jobStore.update(jobId, (j) => {
-    const ds = j.research?.domains.find((d) => d.domain === domain);
-    if (ds) {
-      ds.status = "running";
-      ds.sessionId = sessionId;
-      ds.error = undefined;
-    }
-  });
-  await emit(ctx, jobId, "research", { domain, status: "running" });
 }
 
 async function markDomain(

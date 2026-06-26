@@ -70,13 +70,8 @@ export interface ResearchDomainState {
   slug: string;
   status: ResearchDomainStatus;
   error?: string;
-  /**
-   * Stable Claude CLI session id for this domain's research call. Assigned before
-   * the call is spawned and persisted, so an interrupted call (server restart,
-   * token expiry) can be RESUMED with `--resume <sessionId>` instead of starting
-   * the agentic web-research loop over from scratch.
-   */
-  sessionId?: string;
+  /** USD cost of this domain's research call (so the UI can show per-domain spend). */
+  cost?: number;
   /** Compact summary kept in job.json; the full brief lives in research/<slug>.json. */
   summary?: { keyApis: number; gotchas: number; sources: number };
 }
@@ -126,6 +121,18 @@ export interface GeneratedSkill {
   status: SkillGenStatus;
   error?: string;
   validation?: SkillValidation;
+  /** Set when this skill was seeded from an existing library skill and adapted. */
+  reusedFrom?: { jobId: string; slug: string; name: string };
+}
+
+/** One generated skill surfaced in the cross-job library. */
+export interface LibrarySkill {
+  jobId: string;
+  jobDescription: string;
+  slug: string;
+  name: string;
+  description: string;
+  createdAt: string;
 }
 
 export type GenerationStatus = "pending" | "running" | "done" | "done_with_warnings" | "failed";
@@ -209,6 +216,8 @@ export interface Job {
   selftest?: SelfTestState;
   results?: ResultsState;
   meter: Meter;
+  /** When true, generation may seed a new skill from a matching existing library skill. Off by default. */
+  reuseSkills?: boolean;
   /** Free-text note, e.g. set when a job is reconciled after a server restart. */
   note?: string;
 }

@@ -27,6 +27,11 @@ export function SkillCards({ generation }: { generation: GenerationState | undef
               <span className="sc-name">{s.name}</span>
               <span className="sc-status">{LABEL[s.status]}</span>
             </header>
+            {s.reusedFrom && (
+              <p className="sc-reused" title={`Seeded from ${s.reusedFrom.slug}`}>
+                ♻ adapted from <strong>{s.reusedFrom.name}</strong>
+              </p>
+            )}
             {s.status === "done" && s.validation && (
               <dl className="sc-validation">
                 <div><dt>Description</dt><dd>{s.validation.descriptionChars} chars</dd></div>

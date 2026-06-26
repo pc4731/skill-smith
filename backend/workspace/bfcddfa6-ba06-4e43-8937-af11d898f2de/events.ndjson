@@ -39,3 +39,21 @@
 {"at":"2026-06-24T17:13:46.476Z","name":"research","data":{"domain":"Deployment (Cloud Manager / AEMaaCS pipelines)","status":"failed","error":"claude exited 1: "}}
 {"at":"2026-06-24T17:13:46.485Z","name":"research","data":{"domain":"Authentication & delivery (dev tokens, AEM as a Cloud Service, Edge Delivery)","status":"failed","error":"claude exited 1: "}}
 {"at":"2026-06-24T17:13:49.138Z","name":"research","data":{"domain":"CORS, dispatcher config & caching for headless delivery","status":"failed","error":"claude exited 1: "}}
+{"at":"2026-06-25T17:06:14.879Z","name":"stage","data":{"stageKey":"research","status":"running"}}
+{"at":"2026-06-25T17:06:14.879Z","name":"research","data":{"domain":"AEM Content Fragment Models & authoring (headless content modeling)","status":"done","summary":{"keyApis":8,"gotchas":9,"sources":5}}}
+{"at":"2026-06-25T17:06:14.879Z","name":"research","data":{"domain":"AEM GraphQL API (persisted queries, endpoints, filtering)","status":"done","summary":{"keyApis":7,"gotchas":9,"sources":4}}}
+{"at":"2026-06-25T17:06:14.879Z","name":"research","data":{"domain":"AEM Content Services / Assets HTTP API delivery","status":"done","summary":{"keyApis":9,"gotchas":8,"sources":5}}}
+{"at":"2026-06-25T17:06:14.879Z","name":"research","data":{"domain":"React SPA architecture (hooks, routing, data fetching)","status":"pending"}}
+{"at":"2026-06-25T17:06:14.879Z","name":"research","data":{"domain":"@adobe/aem-headless-client-js / aem-react-editable-components SDK","status":"pending"}}
+{"at":"2026-06-25T17:06:14.879Z","name":"research","data":{"domain":"AEM SPA Editor + Editable Components (Universal Editor / in-context editing)","status":"pending"}}
+{"at":"2026-06-25T17:06:14.879Z","name":"research","data":{"domain":"AEM project structure & Maven archetype (ui.apps, ui.frontend, core bundles)","status":"pending"}}
+{"at":"2026-06-25T17:06:14.880Z","name":"research","data":{"domain":"Authentication & delivery (dev tokens, AEM as a Cloud Service, Edge Delivery)","status":"pending"}}
+{"at":"2026-06-25T17:06:14.880Z","name":"research","data":{"domain":"CORS, dispatcher config & caching for headless delivery","status":"pending"}}
+{"at":"2026-06-25T17:06:14.880Z","name":"research","data":{"domain":"Deployment (Cloud Manager / AEMaaCS pipelines)","status":"pending"}}
+{"at":"2026-06-25T17:06:14.881Z","name":"research","data":{"domain":"React SPA architecture (hooks, routing, data fetching)","status":"running"}}
+{"at":"2026-06-25T17:06:14.884Z","name":"research","data":{"domain":"AEM SPA Editor + Editable Components (Universal Editor / in-context editing)","status":"running"}}
+{"at":"2026-06-25T17:06:14.887Z","name":"research","data":{"domain":"@adobe/aem-headless-client-js / aem-react-editable-components SDK","status":"running"}}
+{"at":"2026-06-25T17:06:14.897Z","name":"research","data":{"domain":"AEM project structure & Maven archetype (ui.apps, ui.frontend, core bundles)","status":"running"}}
+{"at":"2026-06-25T17:06:14.899Z","name":"research","data":{"domain":"Authentication & delivery (dev tokens, AEM as a Cloud Service, Edge Delivery)","status":"running"}}
+{"at":"2026-06-25T17:06:14.900Z","name":"research","data":{"domain":"CORS, dispatcher config & caching for headless delivery","status":"running"}}
+{"at":"2026-06-25T17:06:14.900Z","name":"research","data":{"domain":"Deployment (Cloud Manager / AEMaaCS pipelines)","status":"running"}}

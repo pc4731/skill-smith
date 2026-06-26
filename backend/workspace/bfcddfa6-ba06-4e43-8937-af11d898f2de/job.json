@@ -4,7 +4,7 @@
   "status": "active",
   "description": "AEM project with headless react",
   "createdAt": "2026-06-24T17:05:14.734Z",
-  "updatedAt": "2026-06-24T17:13:49.136Z",
+  "updatedAt": "2026-06-25T17:06:14.900Z",
   "stages": [
     {
       "key": "scope",
@@ -241,38 +241,32 @@
       {
         "domain": "@adobe/aem-headless-client-js / aem-react-editable-components SDK",
         "slug": "adobe-aem-headless-client-js-aem-react-editable-components-sdk",
-        "status": "failed",
-        "error": "claude exited 1: "
+        "status": "running"
       },
       {
         "domain": "AEM SPA Editor + Editable Components (Universal Editor / in-context editing)",
         "slug": "aem-spa-editor-editable-components-universal-editor-in-context-e",
-        "status": "failed",
-        "error": "claude exited 1: "
+        "status": "running"
       },
       {
         "domain": "AEM project structure & Maven archetype (ui.apps, ui.frontend, core bundles)",
         "slug": "aem-project-structure-maven-archetype-ui-apps-ui-frontend-core-b",
-        "status": "failed",
-        "error": "claude exited 1: "
+        "status": "running"
       },
       {
         "domain": "Authentication & delivery (dev tokens, AEM as a Cloud Service, Edge Delivery)",
         "slug": "authentication-delivery-dev-tokens-aem-as-a-cloud-service-edge-d",
-        "status": "failed",
-        "error": "claude exited 1: "
+        "status": "running"
       },
       {
         "domain": "CORS, dispatcher config & caching for headless delivery",
         "slug": "cors-dispatcher-config-caching-for-headless-delivery",
-        "status": "failed",
-        "error": "claude exited 1: "
+        "status": "running"
       },
       {
         "domain": "Deployment (Cloud Manager / AEMaaCS pipelines)",
         "slug": "deployment-cloud-manager-aemaacs-pipelines",
-        "status": "failed",
-        "error": "claude exited 1: "
+        "status": "running"
       }
     ]
   }

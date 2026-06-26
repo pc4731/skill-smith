@@ -1,4 +1,4 @@
-import type { Job, JobSummary, Scope } from "./types.js";
+import type { Job, JobSummary, LibrarySkill, Scope } from "./types.js";
 
 async function jsonFetch<T>(url: string, init?: RequestInit): Promise<T> {
   const res = await fetch(url, {
@@ -19,8 +19,11 @@ async function jsonFetch<T>(url: string, init?: RequestInit): Promise<T> {
 }
 
 export const api = {
-  createJob(description: string): Promise<{ id: string }> {
-    return jsonFetch("/api/jobs", { method: "POST", body: JSON.stringify({ description }) });
+  createJob(description: string, reuse = false): Promise<{ id: string }> {
+    return jsonFetch("/api/jobs", { method: "POST", body: JSON.stringify({ description, reuse }) });
+  },
+  listSkills(): Promise<LibrarySkill[]> {
+    return jsonFetch("/api/skills");
   },
   sayHi(): Promise<{ id: string }> {
     return jsonFetch("/api/say-hi", { method: "POST" });
@@ -33,6 +36,10 @@ export const api = {
   },
   rerunJob(id: string): Promise<{ id: string }> {
     return jsonFetch(`/api/jobs/${id}/rerun`, { method: "POST" });
+  },
+  /** Resume Stage 1 research — re-runs only domains without a brief on disk (failed/pending). */
+  resumeResearch(id: string): Promise<{ ok: boolean }> {
+    return jsonFetch(`/api/jobs/${id}/research`, { method: "POST" });
   },
   submitAnswers(
     id: string,

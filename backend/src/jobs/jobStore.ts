@@ -4,13 +4,31 @@ import fsp from "node:fs/promises";
 import path from "node:path";
 import { StageKeys } from "../config/config.js";
 import { emptyMeter } from "../meter/costMeter.js";
-import { eventsFile, jobDir, jobFile, planFile, rawFile, reportFile, researchFile, resultsFile, scopeFile } from "./jobPaths.js";
-import type { Job, JobKind, JobSummary, ResearchBrief, ResultsState, Scope, SkillPlanItem, SkillReport, StageState } from "./types.js";
+import { eventsFile, jobDir, jobFile, planFile, rawFile, reportFile, researchFile, resultsFile, scopeFile, skillsDir } from "./jobPaths.js";
+import type { Job, JobKind, JobSummary, LibrarySkill, ResearchBrief, ResultsState, Scope, SkillPlanItem, SkillReport, StageState } from "./types.js";
+
+/** Minimal YAML-frontmatter reader for a SKILL.md (name + description only). */
+function parseSkillFrontmatter(md: string): { name?: string; description?: string } {
+  const m = md.match(/^---\n([\s\S]*?)\n---/);
+  if (!m) return {};
+  const out: Record<string, string> = {};
+  for (const line of (m[1] ?? "").split("\n")) {
+    const i = line.indexOf(":");
+    if (i <= 0) continue;
+    const k = line.slice(0, i).trim();
+    let v = line.slice(i + 1).trim();
+    if ((v.startsWith('"') && v.endsWith('"')) || (v.startsWith("'") && v.endsWith("'"))) v = v.slice(1, -1);
+    out[k] = v;
+  }
+  return { name: out.name, description: out.description };
+}
 
 export interface CreateJobInput {
   description: string;
   kind?: JobKind;
   ceiling: number;
+  /** Opt-in: let generation seed skills from matching existing library skills. */
+  reuseSkills?: boolean;
 }
 
 function initialStages(): StageState[] {
@@ -54,6 +72,7 @@ export class JobStore {
       updatedAt: now,
       stages: initialStages(),
       meter: emptyMeter(input.ceiling),
+      reuseSkills: input.reuseSkills ?? false,
     };
     await fsp.mkdir(path.join(jobDir(this.workspaceDir, id), "raw"), { recursive: true });
     await this.write(job);
@@ -103,6 +122,49 @@ export class JobStore {
       cost: j.meter.totalCostUsd,
       calls: j.meter.calls,
     }));
+  }
+
+  /**
+   * Cross-job library of every generated skill on disk (newest-first). Reads each
+   * skills/<slug>/SKILL.md frontmatter. Used by the library UI and the reuse matcher.
+   */
+  async listSkills(): Promise<LibrarySkill[]> {
+    const jobs = await this.list();
+    const out: LibrarySkill[] = [];
+    for (const job of jobs) {
+      const dir = skillsDir(this.workspaceDir, job.id);
+      let entries: import("node:fs").Dirent[];
+      try {
+        entries = await fsp.readdir(dir, { withFileTypes: true });
+      } catch {
+        continue; // job has no skills/ dir yet
+      }
+      for (const e of entries) {
+        if (!e.isDirectory()) continue;
+        let md: string;
+        try {
+          md = await fsp.readFile(path.join(dir, e.name, "SKILL.md"), "utf8");
+        } catch {
+          continue; // not a finished skill
+        }
+        const { name, description } = parseSkillFrontmatter(md);
+        out.push({
+          jobId: job.id,
+          jobDescription: job.description,
+          slug: e.name,
+          name: name || e.name,
+          description: description || "",
+          createdAt: job.createdAt,
+        });
+      }
+    }
+    out.sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
+    return out;
+  }
+
+  /** Absolute path to a job's skills/ directory (used by the reuse matcher to copy a seed). */
+  skillsDir(id: string): string {
+    return skillsDir(this.workspaceDir, id);
   }
 
   /** Read-modify-write a job atomically (serialized per job id). Throws if missing. */

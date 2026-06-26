@@ -77,6 +77,7 @@ export interface ResearchDomainState {
   slug: string;
   status: ResearchDomainStatus;
   error?: string;
+  cost?: number;
   summary?: { keyApis: number; gotchas: number; sources: number };
 }
 
@@ -121,6 +122,17 @@ export interface GeneratedSkill {
   status: SkillGenStatus;
   error?: string;
   validation?: SkillValidation;
+  reusedFrom?: { jobId: string; slug: string; name: string };
+}
+
+/** One generated skill surfaced in the cross-job library. */
+export interface LibrarySkill {
+  jobId: string;
+  jobDescription: string;
+  slug: string;
+  name: string;
+  description: string;
+  createdAt: string;
 }
 export type GenerationStatus = "pending" | "running" | "done" | "done_with_warnings" | "failed";
 export interface GenerationState {
@@ -190,4 +202,5 @@ export interface Job {
   selftest?: SelfTestState;
   results?: ResultsState;
   meter: Meter;
+  reuseSkills?: boolean;
 }

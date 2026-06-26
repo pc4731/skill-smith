@@ -59,4 +59,25 @@ describe("JobStore", () => {
     expect(await store.get("nonexistent-id")).toBeNull();
     expect(await store.get("../escape")).toBeNull();
   });
+
+  it("lists generated skills across jobs from their SKILL.md frontmatter", async () => {
+    const ws = tmpWorkspace();
+    const store = new JobStore(ws);
+    const job = await store.create({ description: "react app", ceiling: 10 });
+    const dir = path.join(store.skillsDir(job.id), "react-hooks");
+    fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(
+      path.join(dir, "SKILL.md"),
+      "---\nname: React Hooks\ndescription: Use this skill for React hooks.\n---\n\n# React Hooks\n",
+    );
+
+    const skills = await store.listSkills();
+    expect(skills).toHaveLength(1);
+    expect(skills[0]).toMatchObject({
+      jobId: job.id,
+      slug: "react-hooks",
+      name: "React Hooks",
+      description: "Use this skill for React hooks.",
+    });
+  });
 });

@@ -10,6 +10,7 @@ export function TopBar() {
         <span className="brand-name">Skill Smith</span>
       </Link>
       <nav className="topbar-nav">
+        <Link to="/skills" className="nav-link">Skills</Link>
         <Link to="/history" className="nav-link">History</Link>
         <button
           type="button"

@@ -38,10 +38,16 @@ export function createRouter(ctx: AppContext): Router {
       description,
       kind: "skill",
       ceiling: ctx.config.perJobInvocationCeiling,
+      reuseSkills: req.body?.reuse === true,
     });
     await emitJob(ctx, job);
     void runStage0(ctx, job.id);
     res.status(201).json({ id: job.id });
+  });
+
+  // Cross-job library of every generated skill (newest-first).
+  router.get("/skills", async (_req, res) => {
+    res.json(await ctx.jobStore.listSkills());
   });
 
   // The round-trip proof: `claude -p "say hi"` streamed live.

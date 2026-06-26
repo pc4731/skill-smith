@@ -51,6 +51,20 @@ export function RunScreen() {
     }
   };
 
+  const retryResearch = async () => {
+    if (!id) return;
+    setBusy(true);
+    try {
+      await api.resumeResearch(id);
+      const fresh = await api.getJob(id);
+      dispatch({ type: "job", job: fresh });
+    } catch (err) {
+      dispatch({ type: "error", message: err instanceof Error ? err.message : String(err) });
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const designAwaiting = job?.design?.status === "awaiting_approval";
 
   return (
@@ -72,7 +86,9 @@ export function RunScreen() {
             />
           )}
 
-          {job?.research && <ResearchCards research={job.research} />}
+          {job?.research && (
+            <ResearchCards research={job.research} busy={busy} onRetry={retryResearch} />
+          )}
 
           {designAwaiting && job?.design && (
             <SkillPlan design={job.design} busy={busy} onApprove={approvePlan} />

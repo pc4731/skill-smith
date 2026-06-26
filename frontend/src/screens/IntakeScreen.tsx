@@ -29,7 +29,11 @@ export function IntakeScreen() {
           researches, generates, and self-tests a set of Agent Skills.
         </p>
       </div>
-      <PromptBar onSubmit={(d) => start(() => api.createJob(d))} onSayHi={() => start(() => api.sayHi())} busy={busy} />
+      <PromptBar
+        onSubmit={(d, reuse) => start(() => api.createJob(d, reuse))}
+        onSayHi={() => start(() => api.sayHi())}
+        busy={busy}
+      />
       {error && <p className="error-banner" role="alert">{error}</p>}
     </main>
   );
