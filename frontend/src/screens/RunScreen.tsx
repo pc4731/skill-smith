@@ -51,11 +51,12 @@ export function RunScreen() {
     }
   };
 
-  const retryResearch = async () => {
+  // Resume a settled per-item stage, re-running only its failed items.
+  const resume = (fn: (id: string) => Promise<unknown>) => async () => {
     if (!id) return;
     setBusy(true);
     try {
-      await api.resumeResearch(id);
+      await fn(id);
       const fresh = await api.getJob(id);
       dispatch({ type: "job", job: fresh });
     } catch (err) {
@@ -64,6 +65,9 @@ export function RunScreen() {
       setBusy(false);
     }
   };
+  const retryResearch = resume(api.resumeResearch);
+  const retryGeneration = resume(api.resumeGeneration);
+  const retrySelfTest = resume(api.resumeSelfTest);
 
   const designAwaiting = job?.design?.status === "awaiting_approval";
 
@@ -94,9 +98,13 @@ export function RunScreen() {
             <SkillPlan design={job.design} busy={busy} onApprove={approvePlan} />
           )}
 
-          {job?.generation && <SkillCards generation={job.generation} />}
+          {job?.generation && (
+            <SkillCards generation={job.generation} busy={busy} onRetry={retryGeneration} />
+          )}
 
-          {job?.selftest && <SelfTestCards selftest={job.selftest} />}
+          {job?.selftest && (
+            <SelfTestCards selftest={job.selftest} busy={busy} onRetry={retrySelfTest} />
+          )}
 
           {id && job?.results && <ResultsView jobId={id} results={job.results} />}
 

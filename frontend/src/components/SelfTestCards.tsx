@@ -13,14 +13,40 @@ function pct(n: number | undefined): string {
 }
 
 /** Stage-4 per-skill self-test report cards (trigger rate + capability score + pass/fail). */
-export function SelfTestCards({ selftest }: { selftest: SelfTestState | undefined }) {
+export function SelfTestCards({
+  selftest,
+  busy = false,
+  onRetry,
+}: {
+  selftest: SelfTestState | undefined;
+  busy?: boolean;
+  /** Re-test only failed skills (resume). When omitted, the button is hidden. */
+  onRetry?: () => void;
+}) {
   if (!selftest || selftest.skills.length === 0) return null;
+
+  const failedCount = selftest.skills.filter((s) => s.status === "failed").length;
+  const isRunning = selftest.status === "running";
+  // Offer a retry only once self-test has settled and something actually failed.
+  const canRetry = Boolean(onRetry) && failedCount > 0 && !isRunning;
+
   return (
     <section className="selftest" aria-label="Self-test reports">
       <h2 className="selftest-title">
         Self-test
         {selftest.status === "done_with_warnings" && (
           <span className="selftest-warn"> — some skills failed self-test</span>
+        )}
+        {canRetry && (
+          <button
+            type="button"
+            className="rc-retry"
+            onClick={onRetry}
+            disabled={busy}
+            aria-label={`Retry ${failedCount} failed skill${failedCount === 1 ? "" : "s"}`}
+          >
+            {busy ? "Retrying…" : `Retry ${failedCount} failed`}
+          </button>
         )}
       </h2>
       <div className="selftest-cards" aria-live="polite">

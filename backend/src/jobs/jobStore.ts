@@ -208,6 +208,16 @@ export class JobStore {
     await this.writeAtomic(reportFile(this.workspaceDir, id, slug), JSON.stringify(report, null, 2));
   }
 
+  /** Read a Stage-4 per-skill self-test report, or null if none exists on disk. */
+  async readReport(id: string, slug: string): Promise<SkillReport | null> {
+    try {
+      const buf = await fsp.readFile(reportFile(this.workspaceDir, id, slug), "utf8");
+      return JSON.parse(buf) as SkillReport;
+    } catch {
+      return null;
+    }
+  }
+
   /** Persist the Stage-5 assembled results (atomic). */
   async writeResults(id: string, results: ResultsState): Promise<void> {
     await this.writeAtomic(resultsFile(this.workspaceDir, id), JSON.stringify(results, null, 2));

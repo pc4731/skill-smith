@@ -9,14 +9,40 @@ const LABEL: Record<SkillGenStatus, string> = {
 };
 
 /** Stage-3 per-skill generation cards with the deterministic validation result. */
-export function SkillCards({ generation }: { generation: GenerationState | undefined }) {
+export function SkillCards({
+  generation,
+  busy = false,
+  onRetry,
+}: {
+  generation: GenerationState | undefined;
+  busy?: boolean;
+  /** Re-generate only failed skills (resume). When omitted, the button is hidden. */
+  onRetry?: () => void;
+}) {
   if (!generation || generation.skills.length === 0) return null;
+
+  const failedCount = generation.skills.filter((s) => s.status === "failed").length;
+  const isRunning = generation.status === "running";
+  // Offer a retry only once generation has settled and something actually failed.
+  const canRetry = Boolean(onRetry) && failedCount > 0 && !isRunning;
+
   return (
     <section className="skills" aria-label="Generated skills">
       <h2 className="skills-title">
         Generated skills
         {generation.status === "done_with_warnings" && (
           <span className="skills-warn"> — some skills failed validation</span>
+        )}
+        {canRetry && (
+          <button
+            type="button"
+            className="rc-retry"
+            onClick={onRetry}
+            disabled={busy}
+            aria-label={`Retry ${failedCount} failed skill${failedCount === 1 ? "" : "s"}`}
+          >
+            {busy ? "Retrying…" : `Retry ${failedCount} failed`}
+          </button>
         )}
       </h2>
       <div className="skill-cards" aria-live="polite">

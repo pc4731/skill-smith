@@ -1,9 +1,23 @@
+import fs from "node:fs";
+import path from "node:path";
 import request from "supertest";
 import { describe, expect, it } from "vitest";
 import { buildContext } from "../src/context.js";
+import { skillDir } from "../src/jobs/jobPaths.js";
 import { reconcileOrphans } from "../src/runtime/reconcile.js";
 import { createApp } from "../src/server.js";
 import { sleep, testConfig } from "./helpers.js";
+
+/** Write a minimal but VALID SKILL.md so validateSkill() treats the skill as generated. */
+function writeValidSkill(workspaceDir: string, jobId: string, slug: string, name: string): void {
+  const dir = skillDir(workspaceDir, jobId, slug);
+  fs.mkdirSync(path.join(dir, "references"), { recursive: true });
+  fs.writeFileSync(
+    path.join(dir, "SKILL.md"),
+    `---\nname: ${name}\ndescription: Use this skill when working on ${name}.\n---\n\n# ${name}\n\nDo the thing.\n`,
+    "utf8",
+  );
+}
 
 describe("Phase 6 — history, re-run, restart reconciliation", () => {
   it("GET /api/jobs returns compact summaries, newest-first", async () => {
@@ -119,5 +133,82 @@ describe("Phase 6 — history, re-run, restart reconciliation", () => {
     expect(research?.status).toBe("done");
     const after = await ctx.jobStore.get(job.id);
     expect(after?.status).not.toBe("failed"); // resumed, not reconciled to failed
+  });
+
+  it("reconcileOrphans auto-resumes a generate-interrupted job, reusing skills already on disk", async () => {
+    const config = testConfig();
+    const ctx = buildContext({ config, heartbeatMs: 0 });
+    const skills = [
+      { name: "Alpha Skill", slug: "alpha-skill", description: "d", scopeBoundaries: "b", sourceDomains: [] },
+      { name: "Beta Skill", slug: "beta-skill", description: "d", scopeBoundaries: "b", sourceDomains: [] },
+    ];
+    const job = await ctx.jobStore.create({ description: "interrupted generation", ceiling: 150 });
+    await ctx.jobStore.update(job.id, (j) => {
+      j.design = { status: "done", skills };
+      j.generation = { status: "running", skills: skills.map((s) => ({ name: s.name, slug: s.slug, status: "running" as const })) };
+      const s = j.stages.find((x) => x.key === "generate");
+      if (s) s.status = "running";
+      j.status = "active";
+    });
+    // Both skills already validate on disk → resume reuses them, nothing re-generates.
+    for (const s of skills) writeValidSkill(config.workspaceDir, job.id, s.slug, s.name);
+
+    const n = await reconcileOrphans(ctx);
+    expect(n).toEqual({ reconciled: 0, resumed: 1 });
+
+    let generate;
+    for (let i = 0; i < 50; i++) {
+      const after = await ctx.jobStore.get(job.id);
+      generate = after?.stages.find((s) => s.key === "generate");
+      if (generate?.status === "done") break;
+      await sleep(10);
+    }
+    expect(generate?.status).toBe("done");
+    expect((await ctx.jobStore.get(job.id))?.status).not.toBe("failed");
+  });
+
+  it("reconcileOrphans auto-resumes a self-test-interrupted job, reusing passing reports on disk", async () => {
+    const config = testConfig();
+    const ctx = buildContext({ config, heartbeatMs: 0 });
+    const skills = [
+      { name: "Alpha Skill", slug: "alpha-skill", description: "d", scopeBoundaries: "b", sourceDomains: [] },
+      { name: "Beta Skill", slug: "beta-skill", description: "d", scopeBoundaries: "b", sourceDomains: [] },
+    ];
+    const job = await ctx.jobStore.create({ description: "interrupted self-test", ceiling: 150 });
+    await ctx.jobStore.update(job.id, (j) => {
+      j.design = { status: "done", skills };
+      j.generation = { status: "done", skills: skills.map((s) => ({ name: s.name, slug: s.slug, status: "done" as const })) };
+      j.selftest = { status: "running", skills: skills.map((s) => ({ name: s.name, slug: s.slug, status: "running" as const })) };
+      const s = j.stages.find((x) => x.key === "test");
+      if (s) s.status = "running";
+      j.status = "active";
+    });
+    // Both skills already have a PASSING report on disk → resume reuses them, nothing re-tests.
+    for (const s of skills) {
+      writeValidSkill(config.workspaceDir, job.id, s.slug, s.name);
+      await ctx.jobStore.writeReport(job.id, s.slug, {
+        slug: s.slug,
+        triggerRate: 1,
+        falseTriggerRate: 0,
+        capabilityScore: 1,
+        passed: true,
+        iterations: 0,
+        issues: [],
+        prompts: { shouldTrigger: ["a"], shouldNot: ["b"] },
+      });
+    }
+
+    const n = await reconcileOrphans(ctx);
+    expect(n).toEqual({ reconciled: 0, resumed: 1 });
+
+    let test;
+    for (let i = 0; i < 50; i++) {
+      const after = await ctx.jobStore.get(job.id);
+      test = after?.stages.find((s) => s.key === "test");
+      if (test?.status === "done") break;
+      await sleep(10);
+    }
+    expect(test?.status).toBe("done");
+    expect((await ctx.jobStore.get(job.id))?.status).not.toBe("failed");
   });
 });

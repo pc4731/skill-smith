@@ -41,6 +41,14 @@ export const api = {
   resumeResearch(id: string): Promise<{ ok: boolean }> {
     return jsonFetch(`/api/jobs/${id}/research`, { method: "POST" });
   },
+  /** Resume Stage 3 generation — re-runs only skills missing a valid SKILL.md (failed/pending). */
+  resumeGeneration(id: string): Promise<{ ok: boolean }> {
+    return jsonFetch(`/api/jobs/${id}/generate`, { method: "POST" });
+  },
+  /** Resume Stage 4 self-test — re-runs only skills without a passing report (failed/pending). */
+  resumeSelfTest(id: string): Promise<{ ok: boolean }> {
+    return jsonFetch(`/api/jobs/${id}/test`, { method: "POST" });
+  },
   submitAnswers(
     id: string,
     payload: { answers?: Record<string, string | string[]>; useDefaults?: boolean },

@@ -233,6 +233,115 @@ export async function generateOne(
   }
 }
 
+/**
+ * Resume Stage 3 — incremental generation. Unlike `runStage3` which resets all
+ * skills, this only re-generates skills whose directory does NOT already hold a
+ * VALID SKILL.md (failed/pending). Skills that already validated on disk are kept
+ * untouched and replay zero tokens. Mirrors `resumeStage1` at skill granularity.
+ */
+export async function resumeStage3(ctx: AppContext, jobId: string): Promise<void> {
+  const job = await ctx.jobStore.get(jobId);
+  const plan = job?.design?.skills ?? [];
+  if (plan.length === 0) return;
+
+  const { readBriefs } = await import("./stage2Design.js");
+  const briefs = await readBriefs(ctx, jobId);
+  const briefsText = briefs
+    .map((b) => `### ${b.domain}\nAPIs: ${b.key_apis.join(", ")}\nGotchas: ${b.gotchas.join(", ")}\nVersions: ${b.version_notes}`)
+    .join("\n\n");
+
+  // Partition the plan into skills already generated (valid on disk) vs. pending.
+  const pending: SkillPlanItem[] = [];
+  const merged: GeneratedSkill[] = [];
+  for (const s of plan) {
+    const validation = validateSkill(skillDir(ctx.config.workspaceDir, jobId, s.slug));
+    if (validation.ok) {
+      const prev = job?.generation?.skills.find((g) => g.slug === s.slug);
+      merged.push({
+        name: s.name,
+        slug: s.slug,
+        status: "done",
+        validation,
+        ...(prev?.reusedFrom ? { reusedFrom: prev.reusedFrom } : {}),
+      });
+    } else {
+      pending.push(s);
+      merged.push({ name: s.name, slug: s.slug, status: "pending" });
+    }
+  }
+
+  // Everything already generated → just advance to Stage 4.
+  if (pending.length === 0) {
+    const advanced = await ctx.jobStore.update(jobId, (j) => {
+      j.generation = { status: "done", skills: merged };
+      const stage = j.stages.find((s) => s.key === "generate");
+      if (stage) {
+        stage.status = "done";
+        stage.endedAt = new Date().toISOString();
+        stage.error = undefined;
+      }
+      j.status = "active";
+    });
+    await emit(ctx, jobId, "stage", { stageKey: "generate", status: "done" });
+    await emitJob(ctx, advanced);
+    const { runStage4 } = await import("./stage4SelfTest.js");
+    void runStage4(ctx, jobId);
+    return;
+  }
+
+  await ctx.jobStore.update(jobId, (j) => {
+    j.generation = { status: "running", skills: merged };
+    const stage = j.stages.find((s) => s.key === "generate");
+    if (stage) {
+      stage.status = "running";
+      stage.startedAt = stage.startedAt ?? new Date().toISOString();
+      stage.error = undefined;
+    }
+    j.status = "active";
+  });
+  await emit(ctx, jobId, "stage", { stageKey: "generate", status: "running" });
+  for (const g of merged) {
+    await emit(ctx, jobId, "skill", {
+      name: g.name,
+      slug: g.slug,
+      status: g.status,
+      ...(g.reusedFrom ? { reusedFrom: g.reusedFrom } : {}),
+    });
+  }
+
+  const tools = toolsFor(ctx.config, "generate");
+  const library = job?.reuseSkills ? await ctx.jobStore.listSkills() : undefined;
+
+  // Only (re-)generate the skills that need it.
+  await Promise.allSettled(pending.map((skill) => generateOne(ctx, jobId, skill, briefsText, tools, library)));
+
+  const finished = await ctx.jobStore.update(jobId, (j) => {
+    const states = j.generation?.skills ?? [];
+    const anyOk = states.some((s) => s.status === "done");
+    const anyFail = states.some((s) => s.status === "failed");
+    const status = !anyOk ? "failed" : anyFail ? "done_with_warnings" : "done";
+    if (j.generation) j.generation.status = status;
+    const stage = j.stages.find((s) => s.key === "generate");
+    if (stage) {
+      stage.status = status === "failed" ? "failed" : "done";
+      stage.endedAt = new Date().toISOString();
+      if (status === "done_with_warnings") stage.error = "some skills failed validation; partial output saved";
+    }
+    if (status === "failed") j.status = "failed";
+  });
+
+  await emit(ctx, jobId, "stage", {
+    stageKey: "generate",
+    status: finished.generation?.status === "failed" ? "failed" : "done",
+  });
+  await emitJob(ctx, finished);
+
+  if (finished.generation?.status !== "failed") {
+    const { runStage4 } = await import("./stage4SelfTest.js");
+    void runStage4(ctx, jobId);
+  }
+}
+
 async function markSkill(
   ctx: AppContext,
   jobId: string,

@@ -7,6 +7,8 @@ import { runSayHi } from "../runtime/sayHi.js";
 import { applyAnswers, runStage0 } from "../stages/stage0Scope.js";
 import { resumeStage1, runStage1 } from "../stages/stage1Research.js";
 import { applyPlan } from "../stages/stage2Design.js";
+import { resumeStage3 } from "../stages/stage3Generate.js";
+import { resumeStage4 } from "../stages/stage4SelfTest.js";
 import path from "node:path";
 
 export function createRouter(ctx: AppContext): Router {
@@ -156,6 +158,44 @@ export function createRouter(ctx: AppContext): Router {
       return;
     }
     void resumeStage1(ctx, req.params.id);
+    res.status(202).json({ ok: true });
+  });
+
+  // Resume Stage 3 generation — re-generates only skills missing a valid SKILL.md.
+  router.post("/jobs/:id/generate", async (req, res) => {
+    const job = await ctx.jobStore.get(req.params.id);
+    if (!job) {
+      res.status(404).json({ error: "job not found" });
+      return;
+    }
+    if (!job.design?.skills?.length) {
+      res.status(409).json({ error: "no approved skill plan yet" });
+      return;
+    }
+    if (job.generation?.status === "running") {
+      res.status(409).json({ error: "generation already running" });
+      return;
+    }
+    void resumeStage3(ctx, req.params.id);
+    res.status(202).json({ ok: true });
+  });
+
+  // Resume Stage 4 self-test — re-tests only skills without a passing report.
+  router.post("/jobs/:id/test", async (req, res) => {
+    const job = await ctx.jobStore.get(req.params.id);
+    if (!job) {
+      res.status(404).json({ error: "job not found" });
+      return;
+    }
+    if (!job.generation?.skills?.some((s) => s.status === "done")) {
+      res.status(409).json({ error: "no generated skills to test" });
+      return;
+    }
+    if (job.selftest?.status === "running") {
+      res.status(409).json({ error: "self-test already running" });
+      return;
+    }
+    void resumeStage4(ctx, req.params.id);
     res.status(202).json({ ok: true });
   });
 

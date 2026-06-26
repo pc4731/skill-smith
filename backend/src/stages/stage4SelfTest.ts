@@ -114,6 +114,103 @@ export async function runStage4(ctx: AppContext, jobId: string): Promise<void> {
   }
 }
 
+/**
+ * Resume Stage 4 — incremental self-test. Unlike `runStage4` which resets all
+ * skills, this only re-tests skills that do NOT already have a PASSING report on
+ * disk (skills/<slug>/report.json). Skills that already passed keep their metrics
+ * and replay zero tokens. Mirrors `resumeStage1` at skill granularity.
+ */
+export async function resumeStage4(ctx: AppContext, jobId: string): Promise<void> {
+  const job = await ctx.jobStore.get(jobId);
+  const generated = job?.generation?.skills.filter((s) => s.status === "done") ?? [];
+  const plan = job?.design?.skills ?? [];
+  if (generated.length === 0) return;
+
+  const targets = generated
+    .map((g) => plan.find((p) => p.slug === g.slug))
+    .filter((p): p is SkillPlanItem => !!p);
+
+  // Partition targets into skills with a passing report on disk vs. pending.
+  const pending: SkillPlanItem[] = [];
+  const merged: SelfTestSkill[] = [];
+  for (const p of targets) {
+    const report = await ctx.jobStore.readReport(jobId, p.slug);
+    if (report?.passed) {
+      merged.push({
+        name: p.name,
+        slug: p.slug,
+        status: "done",
+        triggerRate: report.triggerRate,
+        falseTriggerRate: report.falseTriggerRate,
+        capabilityScore: report.capabilityScore,
+        passed: true,
+        iterations: report.iterations,
+      });
+    } else {
+      pending.push(p);
+      merged.push({ name: p.name, slug: p.slug, status: "pending" });
+    }
+  }
+
+  // Everything already passed → just advance to Stage 5.
+  if (pending.length === 0) {
+    const advanced = await ctx.jobStore.update(jobId, (j) => {
+      j.selftest = { status: "done", skills: merged };
+      const stage = j.stages.find((s) => s.key === "test");
+      if (stage) {
+        stage.status = "done";
+        stage.endedAt = new Date().toISOString();
+        stage.error = undefined;
+      }
+      j.status = "active";
+    });
+    await emit(ctx, jobId, "stage", { stageKey: "test", status: "done" });
+    await emitJob(ctx, advanced);
+    const { runStage5 } = await import("./stage5Package.js");
+    void runStage5(ctx, jobId);
+    return;
+  }
+
+  await ctx.jobStore.update(jobId, (j) => {
+    j.selftest = { status: "running", skills: merged };
+    const stage = j.stages.find((s) => s.key === "test");
+    if (stage) {
+      stage.status = "running";
+      stage.startedAt = stage.startedAt ?? new Date().toISOString();
+      stage.error = undefined;
+    }
+    j.status = "active";
+  });
+  await emit(ctx, jobId, "stage", { stageKey: "test", status: "running" });
+  for (const m of merged) await emit(ctx, jobId, "report", { name: m.name, slug: m.slug, status: m.status });
+
+  // Only (re-)test the skills that need it.
+  await Promise.allSettled(pending.map((skill) => selfTestOne(ctx, jobId, skill)));
+
+  const finished = await ctx.jobStore.update(jobId, (j) => {
+    const states = j.selftest?.skills ?? [];
+    const anyOk = states.some((s) => s.status === "done");
+    const anyFail = states.some((s) => s.status === "failed");
+    const status = !anyOk ? "failed" : anyFail ? "done_with_warnings" : "done";
+    if (j.selftest) j.selftest.status = status;
+    const stage = j.stages.find((s) => s.key === "test");
+    if (stage) {
+      stage.status = status === "failed" ? "failed" : "done";
+      stage.endedAt = new Date().toISOString();
+      if (status === "done_with_warnings") stage.error = "some skills failed self-test; reports saved";
+    }
+    if (status === "failed") j.status = "failed";
+  });
+
+  await emit(ctx, jobId, "stage", { stageKey: "test", status: finished.selftest?.status === "failed" ? "failed" : "done" });
+  await emitJob(ctx, finished);
+
+  if (finished.selftest?.status !== "failed") {
+    const { runStage5 } = await import("./stage5Package.js");
+    void runStage5(ctx, jobId);
+  }
+}
+
 async function selfTestOne(ctx: AppContext, jobId: string, skill: SkillPlanItem): Promise<void> {
   const cfg = ctx.config.selfTest;
   const ctxSkill: SkillContext = { skill, description: skill.description };
